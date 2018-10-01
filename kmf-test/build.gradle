@@ -1,0 +1,13 @@
+apply plugin: "kotlin-kapt"
+
+dependencies {
+    testCompile project(":kmf-api")
+    kaptTest project(":kmf-kapt")
+}
+
+kapt {
+    javacOptions {
+        option("-source", '1.8')
+        option("-target", '1.8')
+    }
+}

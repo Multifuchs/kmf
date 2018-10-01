@@ -1,0 +1,5 @@
+dependencies {
+    compile "org.eclipse.emf:org.eclipse.emf.common:$emf_version"
+    compile "org.eclipse.emf:org.eclipse.emf.ecore:$ecore_version"
+    compile "org.jetbrains.kotlin:kotlin-reflect:1.2.71"
+}
