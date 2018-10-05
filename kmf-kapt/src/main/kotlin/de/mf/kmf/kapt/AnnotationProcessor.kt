@@ -63,6 +63,10 @@ class AnnotationProcessor : AbstractProcessor() {
                         logError("Parsing KMF-Interface ${elem.qualifiedName} failed.")
                         return false
                     }
+                    logInfo("Entity Found: ${entity.typeElement.qualifiedName}")
+                    entity.properties.forEach { prop ->
+                        logInfo("  - ${if (prop.setter == null) "val" else "var"} ${prop.name} : $prop")
+                    }
                     entity
                 }
                 .asSequence()

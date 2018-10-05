@@ -18,7 +18,7 @@ interface Car : EObject {
     var owner: EObject?
 
     // containment reference
-    @get:Contains
+    @Contains
     val wheels: EList<Wheel>
 }
 

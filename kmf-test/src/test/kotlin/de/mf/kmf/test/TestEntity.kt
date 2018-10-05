@@ -7,9 +7,14 @@ import org.eclipse.emf.ecore.EObject
 
 @KMF
 interface TestEntity : EObject {
-    @get:Contains
+
+    var isDope: Boolean
+
+    @Contains
     var other: TestEntity?
 
-    @get:Contains
+    @Contains
     val otherList: EList<TestEntity>
+
+    var xO: String
 }

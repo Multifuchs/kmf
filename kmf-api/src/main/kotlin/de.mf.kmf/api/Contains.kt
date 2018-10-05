@@ -1,5 +1,5 @@
 package de.mf.kmf.api
 
-@Target(AnnotationTarget.PROPERTY_GETTER)
+@Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.RUNTIME)
 annotation class Contains

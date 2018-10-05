@@ -2,12 +2,13 @@ group 'de.mf.kmf'
 version '1.0-SNAPSHOT'
 
 buildscript {
-    ext.kotlin_version = "1.2.71"
+    ext.kotlin_version = "1.3-M2"
     ext.emf_version = "2.3.0-v200706262000"
     ext.ecore_version = "2.15.0"
 
     repositories {
         mavenCentral()
+        maven { url "http://dl.bintray.com/kotlin/kotlin-eap" }
     }
 
     dependencies {
@@ -20,6 +21,8 @@ subprojects {
 
     repositories {
         mavenCentral()
+        maven { url "http://dl.bintray.com/kotlin/kotlin-eap" }
+        maven { url "https://kotlin.bintray.com/kotlinx/" }
     }
 
     dependencies {

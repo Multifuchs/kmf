@@ -2,4 +2,5 @@ dependencies {
     compile project(":kmf-api")
     compile 'com.google.guava:guava:26.0-jre'
     compile "com.squareup:kotlinpoet:1.0.0-RC1"
+    compile "org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.0.4"
 }
