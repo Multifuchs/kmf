@@ -1,5 +1,7 @@
 group 'de.mf.kmf'
-version '0.1-SNAPSHOT'
+version '0.1'
+
+apply plugin: "idea"
 
 buildscript {
     ext.kotlin_version = "1.3-M2"
@@ -17,7 +19,16 @@ buildscript {
 }
 
 allprojects {
+    apply plugin: "java"
     apply plugin: "maven-publish"
+
+    publishing {
+        publications {
+            mavenJava(MavenPublication) {
+                from components.java
+            }
+        }
+    }
 }
 
 subprojects {
@@ -44,4 +55,11 @@ subprojects {
 
 repositories {
     mavenCentral()
+}
+
+idea {
+    module {
+        downloadJavadoc = true
+        downloadSources = true
+    }
 }
