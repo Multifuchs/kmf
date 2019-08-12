@@ -21,7 +21,7 @@
 
 # gradle directories
 settings.gradle
-gradle/
+.gradle/
 
 #buildDirectories
 build/
