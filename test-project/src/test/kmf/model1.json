@@ -1,0 +1,20 @@
+{
+  "name": "test",
+  "package": "de.kmf.test.model",
+  "nsURI": "http://multifuchs.de/modeltest/model1",
+  "types": {
+    "Foo": {
+      "name": "String=bar"
+    },
+    "AllFeatureTypesWODefValues": {
+      "singlePrimitive": "Int",
+      "singlePrimitiveNullable": "Int?",
+      "singleRef": "ref Foo",
+      "singleContain": "contains Foo",
+      "listPrimitive": "Int[]",
+      "listPrimitiveNullable": "Int?[]",
+      "listRef": "ref Foo[]",
+      "listContain": "contains Foo[]"
+    }
+  }
+}
