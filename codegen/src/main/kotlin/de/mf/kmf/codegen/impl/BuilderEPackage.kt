@@ -5,6 +5,7 @@ import com.squareup.kotlinpoet.*
 import de.mf.kmf.codegen.impl.ModelFeatureTypeKind.*
 import org.eclipse.emf.ecore.*
 import org.eclipse.emf.ecore.impl.EPackageImpl
+import org.eclipse.emf.ecore.impl.EPackageRegistryImpl
 
 fun buildEPackage(mp: ModelPackage): FileSpec {
     require(!mp.isForeign)
@@ -152,10 +153,20 @@ private fun TypeSpec.Builder.addInit(mp: ModelPackage, json: JsonObject): TypeSp
                     val typeMPckg = mp.codeGen.mPackages.first {
                         it.packageName == typeName.packageName
                     }
-                    val typeTypeModel = typeMPckg.allModelTypes.first {
-                        it.name == typeName.simpleName
+                    /*
+    val pckg = EPackage.Registry.INSTANCE.getEPackage(EcorePackage.eNS_URI)
+    val eclass = pckg.eClassifiers.filterIsInstance<EClass>()
+                     */
+                    if (typeMPckg.isForeign) {
+                        // EcorePackage
+                        add("%T.Registry.INSTANCE.getEPackage(%S).eClassifiers.filterIsInstance<%T>().first { it.name == %S} as %T, ",
+                            EPackage::class, typeMPckg.nsURI, EClass::class, f.typeName, EClass::class)
+                    } else {
+                        val typeTypeModel = typeMPckg.allModelTypes.first {
+                            it.name == typeName.simpleName
+                        }
+                        addStatement("%M, ", typeTypeModel.poetEClass)
                     }
-                    addStatement("%M, ", typeTypeModel.poetEClass)
                 }
 
                 // 3rd arg is null and is skipped by primitives

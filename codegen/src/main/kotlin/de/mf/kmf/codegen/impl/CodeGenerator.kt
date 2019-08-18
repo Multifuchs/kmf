@@ -35,11 +35,11 @@ class CodeGenerator(
         validatePackages()
         createTypes()
 
-        mPackages.forEach {
+        mPackages.filter { !it.isForeign }.forEach {
             buildEFactory(it).writeTo(buildDir)
             buildEPackage(it).writeTo(buildDir)
         }
-        mTypes.forEach {
+        mTypes.filter { !it.definedInMPackage.isForeign }.forEach {
             buildEObject(it).writeTo(buildDir)
         }
     }

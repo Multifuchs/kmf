@@ -124,7 +124,7 @@ private fun TypeSpec.Builder.addProperties(mt: ModelType): TypeSpec.Builder {
                     propSpec.getter(FunSpec.getterBuilder()
                         .addCode(buildCodeBlock {
                             beginControlFlow("if (${f.poetShadowedMemberName!!.simpleName} != null && ${f.poetShadowedMemberName!!.simpleName}!!.eIsProxy())")
-                            addStatement("val oldValue = ${f.poetShadowedMemberName!!.simpleName} as InternalEObject")
+                            addStatement("val oldValue = ${f.poetShadowedMemberName!!.simpleName} as %T", InternalEObject::class)
                             addStatement("${f.poetShadowedMemberName!!.simpleName} = eResolveProxy(oldValue) as %T", f.poetType)
                             beginControlFlow("if (${f.poetShadowedMemberName!!.simpleName} !== oldValue)")
                             beginControlFlow("if (eNotificationRequired())")
