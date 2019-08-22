@@ -1,2 +1,3 @@
 rootProject.name = 'kmf'
-include('codegen', 'test-project')
+include('codegen')
+include('test-project')

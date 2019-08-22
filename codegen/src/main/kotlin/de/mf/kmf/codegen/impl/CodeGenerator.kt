@@ -38,6 +38,7 @@ class CodeGenerator(
         mPackages.filter { !it.isForeign }.forEach {
             buildEFactory(it).writeTo(buildDir)
             buildEPackage(it).writeTo(buildDir)
+            buildEValidator(it).writeTo(buildDir)
         }
         mTypes.filter { !it.definedInMPackage.isForeign }.forEach {
             buildEObject(it).writeTo(buildDir)

@@ -5,6 +5,10 @@ import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import de.mf.kmf.codegen.impl.ModelFeatureTypeKind.*
 import org.eclipse.emf.common.util.EList
+import kotlin.reflect.KClass
+
+fun TypeName.nullable(isNullable: Boolean = true) = copy(nullable = isNullable)
+fun KClass<*>.nullable(isNullable: Boolean = true) = asTypeName().nullable(isNullable)
 
 /** de.example.ExamplePackage */
 val ModelPackage.poetEPackageType: ClassName
@@ -130,5 +134,12 @@ val ModelType.poetEClassID: MemberName
             f.enclosingClassName!!,
             f.simpleName + "__ID"
         )
+    }
+
+val ModelPackage.poetEValidatorType: ClassName
+    get() {
+        val json = codeGen.jsons.first { it.requireString("nsURI") == nsURI }
+        val name = LOWER_CAMEL.to(UPPER_CAMEL, nameIn(json)!!)
+        return ClassName(packageName, "Abstract${name}Validator")
     }
 
