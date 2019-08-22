@@ -142,7 +142,7 @@ private fun TypeSpec.Builder.addMTypeFun(
         for (f in mt.features) {
             addFunction(FunSpec.builder(f.poetValidateFunName)
                 .addModifiers(KModifier.OPEN)
-                .addParameter("eObj", mt.poetEObjectTypeName)
+                .addParameter("eObj", mt.poetEObjectTypeName.nullable())
                 .addParameter("value", f.poetType)
                 .addParameter("diag", DiagnosticChain::class)
                 .build()
@@ -185,7 +185,7 @@ private fun TypeSpec.Builder.addMaps(
         "EFEATURE_TO_VALIDATOR",
         MAP.parameterizedBy(EStructuralFeature::class.nullable(false))
             .plusParameter(LambdaTypeName.get(
-                parameters = *arrayOf(EObject::class.asTypeName(),
+                parameters = *arrayOf(EObject::class.asTypeName().nullable(),
                     ANY.nullable(),
                     DiagnosticChain::class.asTypeName()),
                 returnType = UNIT))
@@ -197,7 +197,7 @@ private fun TypeSpec.Builder.addMaps(
                 for (f in mt.features) {
                     addStatement("%T.${f.poetFeature.simpleName} to { eObj, value, diag ->", mp.poetEPackageType)
                     indent()
-                    addStatement("${f.poetValidateFunName}(eObj as %T, value as %T, diag)", mt.poetEObjectTypeName, f.poetType)
+                    addStatement("${f.poetValidateFunName}(eObj as %T, value as %T, diag)", mt.poetEObjectTypeName.nullable(), f.poetType)
                     unindent()
                     if (mt === mp.allModelTypes.last() && f === mt.features.last()) addStatement("}")
                     else addStatement("},")
