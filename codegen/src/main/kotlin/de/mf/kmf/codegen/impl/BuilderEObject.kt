@@ -197,11 +197,14 @@ private fun TypeSpec.Builder.addDefaultValues(mt: ModelType): TypeSpec.Builder {
             else DefaultValueProp(
                 it,
                 propName,
-                if (it.defaultValueLiteral != null) {
-                    if (it.typeName == "String") "\"${it.defaultValueLiteral}\""
-                    else it.defaultValueLiteral
-                } else if (it.isNullable) "null"
-                else PrimitiveType.byKotlinName(it.typeName)!!.defaultValueLiteral
+                when {
+                    it.defaultValueLiteral != null ->
+                        if (it.typeName == "String") "\"${it.defaultValueLiteral}\""
+                        else it.defaultValueLiteral
+                    it.isNullable -> "null"
+                    it.typeName == "String" -> "\"\""
+                    else -> PrimitiveType.byKotlinName(it.typeName)!!.defaultValueLiteral
+                }
             )
 
         }
@@ -218,7 +221,9 @@ private fun TypeSpec.Builder.addDefaultValues(mt: ModelType): TypeSpec.Builder {
                 devValProp.propName.simpleName,
                 devValProp.feature.poetType
             )
-                .initializer(devValProp.literal)
+                .initializer(buildCodeBlock {
+                    addStatement("%L", devValProp.literal)
+                })
                 .build()
         )
     }

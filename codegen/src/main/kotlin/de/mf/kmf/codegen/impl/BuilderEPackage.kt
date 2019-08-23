@@ -185,8 +185,11 @@ private fun TypeSpec.Builder.addInit(mp: ModelPackage, json: JsonObject): TypeSp
                 else addStatement("%T.${dvf.simpleName}.toString(), ", dvf.enclosingClassName)
 
                 // 6th and 7th are lower and upper bound
-                if (f.isMany) addStatement("0, -1, ")
-                else addStatement("0, 1, ")
+                when {
+                    f.isMany -> addStatement("0, -1, ")
+                    f.isNullable -> addStatement("0, 1, ")
+                    else -> addStatement("1, 1, ")
+                }
 
                 // 8th is EObject javaclass
                 addStatement("%T::class.java, ", mt.poetEObjectTypeName)

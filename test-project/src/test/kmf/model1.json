@@ -15,6 +15,16 @@
       "listPrimitiveNullable": "Int?[]",
       "listRef": "ref Foo[]",
       "listContain": "contains Foo[]"
+    },
+    "DefValues": {
+      "stringNoDef": "String",
+      "stringNullNoDef": "String?",
+      "stringWDef": "String=Foo",
+      "stringNullWDef": "String?=Foo",
+      "intNoDef": "Int",
+      "intNullNoDef": "Int?",
+      "intWDef": "Int=12",
+      "intNullWDef": "Int?=12"
     }
   }
 }

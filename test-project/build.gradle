@@ -8,7 +8,7 @@ buildscript {
     }
 
     dependencies {
-        classpath "de.mf.kmf:codegen:0.7-SNAPSHOT"
+        classpath "de.mf.kmf:codegen:0.8-SNAPSHOT"
     }
 }
 
