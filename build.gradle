@@ -17,7 +17,7 @@ buildscript {
 }
 
 group 'de.mf.kmf'
-version '0.8'
+version '0.9-SNAPSHOT'
 
 subprojects {
     apply plugin: 'java'
