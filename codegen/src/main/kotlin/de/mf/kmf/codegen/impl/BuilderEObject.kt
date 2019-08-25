@@ -90,7 +90,7 @@ private fun TypeSpec.Builder.addProperties(mt: ModelType): TypeSpec.Builder {
             propSpec.initializer(buildCodeBlock {
                 when (f.typeKind) {
                     PRIMITIVE ->
-                        add("%T<${f.typeName}>(${f.typeName}::class.java, this, %M)", EDataTypeEList::class, f.poetFeatureID)
+                        add("%T<${f.typeName}>(${f.typeName}::class.javaObjectType, this, %M)", EDataTypeEList::class, f.poetFeatureID)
                     REFERENCE ->
                         add("%T<${f.typeName}>(%T::class.java, this, %M)", EObjectResolvingEList::class, (f.poetType as ParameterizedTypeName).typeArguments.first(), f.poetFeatureID)
                     CONTAINMENT ->
