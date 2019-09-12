@@ -145,6 +145,23 @@ private fun TypeSpec.Builder.addMTypeFun(
                 .addParameter("eObj", mt.poetEObjectTypeName.nullable())
                 .addParameter("value", f.poetType)
                 .addParameter("diag", DiagnosticChain::class)
+                .addCode(buildCodeBlock {
+                    if (f.typeKind == ModelFeatureTypeKind.CONTAINMENT) {
+                        if (f.typeFrom !== mp) {
+                            addStatement("// TODO validate object from foreign package")
+                        } else if (f.isMany) {
+                            beginControlFlow("for (e in value)")
+                            val mt = mp.allModelTypes.first { it.name == f.typeName }
+                            addStatement("${mt.poetValidateFunName}(e, diag)")
+                            endControlFlow()
+                        } else {
+                            val mt = mp.allModelTypes.first { it.name == f.typeName }
+                            beginControlFlow("if (value != null)")
+                            addStatement("${mt.poetValidateFunName}(value, diag)")
+                            endControlFlow()
+                        }
+                    }
+                })
                 .build()
             )
         }
