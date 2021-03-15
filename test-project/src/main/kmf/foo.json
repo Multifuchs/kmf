@@ -4,6 +4,10 @@
   },
   "classes": {
     "FooData": {
+      "foobar": {
+        "type": "test.MyEnum",
+        "default": "FOO"
+      },
       "name": "String",
       "hobby": "String?",
       "aChild": "child FooData?",

@@ -52,7 +52,7 @@ internal open class KmfListImpl<T : Any>(
     override fun get(index: Int): T = wrapped[index]
 
     override fun move(from: Int, to: Int) {
-        if (from == to) return
+        if (from == to || to == from + 1) return
         val value = wrapped[from]
         wrapped.add(to, value)
         wrapped.removeAt(from)
@@ -65,7 +65,7 @@ internal open class KmfListImpl<T : Any>(
         if (distinct) {
             val i = indexOf(element)
             if (i != -1) {
-                if (i != index) move(i, index)
+                move(i, index)
                 return true
             }
         }
