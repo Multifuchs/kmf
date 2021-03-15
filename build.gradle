@@ -1,74 +1,45 @@
-apply plugin: "idea"
-
-buildscript {
-    ext.kotlin_version = "1.3.41"
-    ext.emf_version = "2.16.0"
-    ext.ecore_version = "2.18.0"
-
-    repositories {
-        mavenCentral()
-        gradlePluginPortal()
-    }
-
-    dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath "org.javamodularity:moduleplugin:1.5.0"
-    }
-}
-
-group 'de.mf.kmf'
-version '0.11-SNAPSHOT'
-
-subprojects {
-    apply plugin: 'java'
-    apply plugin: 'kotlin'
-    apply plugin: 'org.javamodularity.moduleplugin'
-    apply plugin: 'maven-publish'
-
-    group = rootProject.group
-    version = rootProject.version
-
-    sourceCompatibility = "11"
-    targetCompatibility = "11"
-
-    repositories {
-        mavenCentral()
-        jcenter()
-        maven { url "http://dl.bintray.com/kotlin/kotlin-eap" }
-        maven { url "https://kotlin.bintray.com/kotlinx/" }
-    }
-
-    dependencies {
-        compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    }
-
-    compileKotlin {
-        kotlinOptions.jvmTarget = "1.8"
-    }
-
-    compileTestKotlin {
-        kotlinOptions.jvmTarget = "1.8"
-    }
-
-    publishing {
-        publications {
-            maven(MavenPublication) {
-                groupId = project.group.toString()
-                artifactId = project.name
-                version = project.version.toString()
-                from components.java
-            }
-        }
-    }
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version "$kotlin_version"
 }
 
 repositories {
     mavenCentral()
+    jcenter()
 }
 
-idea {
-    module {
-        downloadJavadoc = true
-        downloadSources = true
+group = 'de.mf.kmf'
+version = '0.1-SNAPSHOT'
+
+subprojects {
+    apply plugin: 'org.jetbrains.kotlin.jvm'
+
+    repositories {
+        mavenCentral()
+        jcenter()
     }
+
+    dependencies {
+        testImplementation 'org.jetbrains.kotlin:kotlin-test-testng'
+    }
+
+    compileKotlin {
+        kotlinOptions.jvmTarget = '1.8'
+    }
+
+    compileTestKotlin {
+        kotlinOptions.jvmTarget = '1.8'
+    }
+
+    compileJava {
+        sourceCompatibility = '1.8'
+    }
+
+    compileTestJava {
+        sourceCompatibility = '1.8'
+    }
+
+    test {
+        useTestNG()
+    }
+
 }

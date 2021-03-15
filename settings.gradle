@@ -1,3 +1,4 @@
 rootProject.name = 'kmf'
-include('codegen')
+includeBuild('gradle-plugin')
 include('test-project')
+include('core')

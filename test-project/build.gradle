@@ -1,45 +1,9 @@
-import de.mf.kmf.codegen.Runner
-
-buildscript {
-    repositories {
-        mavenLocal()
-        mavenCentral()
-        jcenter()
-    }
-
-    dependencies {
-        classpath "de.mf.kmf:codegen:0.10-SNAPSHOT"
-    }
+plugins {
+    id 'de.mf.kmf.gradleplugin'
 }
+
+apply plugin: 'de.mf.kmf.gradleplugin'
 
 dependencies {
-    testImplementation "org.eclipse.emf:org.eclipse.emf.common:$emf_version"
-    testImplementation "org.eclipse.emf:org.eclipse.emf.ecore:$ecore_version"
+    implementation project(':core')
 }
-
-sourceSets {
-    test {
-        kotlin {
-            srcDir "$buildDir/kmf/"
-        }
-    }
-}
-
-task generateKMFCode() {
-    def outputDir = file("$buildDir/kmf/")
-    def inputFiles = file("src/test/kmf").listFiles().toList().findAll {
-        it.name.endsWith(".json")
-    }
-    inputs.files inputFiles
-    outputs.dir outputDir
-
-    doLast {
-        def r = new Runner()
-        r.logger = logger
-        r.modelFiles = inputFiles
-        r.buildDir = outputDir
-        r.exec()
-    }
-}
-
-tasks.compileTestKotlin.dependsOn generateKMFCode

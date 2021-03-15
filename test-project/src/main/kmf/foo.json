@@ -1,0 +1,22 @@
+{
+  "package": "de.mf.kmf.testproject",
+  "imports": {
+  },
+  "classes": {
+    "FooData": {
+      "name": "String",
+      "hobby": "String?",
+      "aChild": "child FooData?",
+      "surnames": "String[]",
+      "friends": "ref FooData[]",
+      "children": "child FooData[]"
+    },
+    "BarData": {
+      "superClass": "FooData",
+      "age": {
+        "type": "Int",
+        "default": "42"
+      }
+    }
+  }
+}
