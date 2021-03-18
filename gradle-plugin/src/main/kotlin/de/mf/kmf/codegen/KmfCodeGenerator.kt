@@ -303,7 +303,7 @@ private fun buildKmfClassObject(parsedRoot: RootDesc, parsedClass: ClassDesc) =
             val initializer = when (ad.multiplicity) {
                 AttrDescMultiplicity.ONE ->
                     CodeBlock.of(
-                        "%T(%T::class, %T.$kind, ${ad.nullable}, %T::${ad.name})",
+                        "%T(this, %T::class, %T.$kind, ${ad.nullable}, %T::${ad.name})",
                         attrType,
                         buildClassName(parsedRoot, ad.valueType),
                         KmfTypes.KMF_ATTRIBUTE_KIND,
@@ -314,7 +314,7 @@ private fun buildKmfClassObject(parsedRoot: RootDesc, parsedClass: ClassDesc) =
                     )
                 AttrDescMultiplicity.MANY ->
                     CodeBlock.of(
-                        "%T(%T::class, %T.$kind, %T::${ad.name})",
+                        "%T(this, %T::class, %T.$kind, %T::${ad.name})",
                         attrType,
                         buildClassName(parsedRoot, ad.valueType),
                         KmfTypes.KMF_ATTRIBUTE_KIND,

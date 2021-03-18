@@ -62,6 +62,7 @@ enum class KmfAttrKind {
 }
 
 sealed class KmfAttribute(
+    val kmfClass: KmfClass,
     /**
      * The type of property values.
      * For [KmfAttribute.List], its the type of the elements.
@@ -93,11 +94,12 @@ sealed class KmfAttribute(
 
     /** 0..1 */
     class Unary(
+        kmfClass: KmfClass,
         valueType: KClass<*>,
         kind: KmfAttrKind,
         val nullable: Boolean,
         kProperty: KProperty1<*, *>
-    ) : KmfAttribute(valueType, kind, kProperty) {
+    ) : KmfAttribute(kmfClass, valueType, kind, kProperty) {
 
         override val kProperty: KMutableProperty1<in KmfObject, Any?> =
             super.kProperty as KMutableProperty1<in KmfObject, Any?>
@@ -123,10 +125,11 @@ sealed class KmfAttribute(
 
     /** 0..n */
     class List(
+        kmfClass: KmfClass,
         valueType: KClass<*>,
         kind: KmfAttrKind,
         kProperty: KProperty1<*, *>
-    ) : KmfAttribute(valueType, kind, kProperty) {
+    ) : KmfAttribute(kmfClass, valueType, kind, kProperty) {
         override val kProperty: KProperty1<in KmfObject, KmfList<Any>>
             get() = super.kProperty as KProperty1<in KmfObject, KmfList<Any>>
 
