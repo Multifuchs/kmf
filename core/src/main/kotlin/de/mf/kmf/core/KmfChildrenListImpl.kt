@@ -1,5 +1,9 @@
 package de.mf.kmf.core
 
+/**
+ * Internally used impl of [KmfList], which is used for list-attributes
+ * containing children of an object.
+ */
 internal class KmfChildrenListImpl<T : KmfObject>(
     owner: KmfObject,
     attr: KmfAttribute.List,

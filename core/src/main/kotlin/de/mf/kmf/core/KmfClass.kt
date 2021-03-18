@@ -4,13 +4,17 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.KProperty1
 
+/** Contains reflective information about [KmfObject]. */
 abstract class KmfClass(
+    /** Kotlin-class of that object. */
     val kClass: KClass<out KmfObject>,
+    /** [KmfClass] this class derives from. */
     val superClass: KmfClass?
 ) {
 
     private val ownAttributes = mutableListOf<KmfAttribute>()
 
+    /** All attributes available. This include all derived attributes as well. */
     val allAttributes: List<KmfAttribute> by lazy {
         if (superClass != null) superClass.allAttributes + ownAttributes
         else ownAttributes
@@ -42,7 +46,20 @@ abstract class KmfClass(
     }
 }
 
-enum class KmfAttrKind { PROPERTY, REFERENCE, CHILD }
+enum class KmfAttrKind {
+    /** Simple primitive value. */
+    PROPERTY,
+
+    /** Reference to another [KmfObject]. */
+    REFERENCE,
+
+    /**
+     * Child [KmfObject]. Each [KmfObject] can have only one parent:
+     * when adding a child to another parent, it automatically will be removed
+     * from its previous parent.
+     */
+    CHILD
+}
 
 sealed class KmfAttribute(
     /**
@@ -74,6 +91,7 @@ sealed class KmfAttribute(
 
     override fun toString() = "$owner::${kProperty.name}"
 
+    /** 0..1 */
     class Unary(
         valueType: KClass<*>,
         kind: KmfAttrKind,
@@ -84,6 +102,12 @@ sealed class KmfAttribute(
         override val kProperty: KMutableProperty1<in KmfObject, Any?> =
             super.kProperty as KMutableProperty1<in KmfObject, Any?>
 
+        /**
+         * @param obj
+         * @param value
+         * @throws KmfException if the given
+         */
+        @Throws(KmfException::class)
         fun setAt(obj: KmfObject, value: Any?): Any? {
             if (value == null) {
                 if (!nullable) throw KmfException("Failed to set value null, because $this isn't nullable.")
@@ -97,6 +121,7 @@ sealed class KmfAttribute(
         }
     }
 
+    /** 0..n */
     class List(
         valueType: KClass<*>,
         kind: KmfAttrKind,
