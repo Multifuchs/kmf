@@ -323,6 +323,9 @@ private fun buildKmfClassObject(parsedRoot: RootDesc, parsedClass: ClassDesc) =
             }
             addProperty(
                 PropertySpec.builder(ad.name, attrType)
+                    .apply {
+                        if (ad.name == "id") modifiers += KModifier.OVERRIDE
+                    }
                     .initializer(initializer)
                     .build()
             )

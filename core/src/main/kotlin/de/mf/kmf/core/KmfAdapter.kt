@@ -14,6 +14,11 @@ interface KmfAdapter {
      * changed.
      */
     fun notify(notification: KmfNotification) = Unit
+
+    /**
+     * Called when the adapter is added to a [KmfObject].
+     */
+    fun onAdapt(obj: KmfObject) = Unit
 }
 
 sealed class KmfNotification(

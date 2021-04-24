@@ -14,6 +14,8 @@ abstract class KmfClass(
 
     private val ownAttributes = mutableListOf<KmfAttribute>()
 
+    open val id: KmfAttribute? = null
+
     /** All attributes available. This include all derived attributes as well. */
     val allAttributes: List<KmfAttribute> by lazy {
         if (superClass != null) superClass.allAttributes + ownAttributes

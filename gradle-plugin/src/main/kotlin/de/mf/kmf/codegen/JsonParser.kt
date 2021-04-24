@@ -137,6 +137,9 @@ private fun validateAttrDesc(ad: AttrDesc) {
     check(ad.multiplicity != AttrDescMultiplicity.MANY || !ad.nullable) {
         "List attributes ([]) must not be nullable"
     }
+    if (ad.name == "id") check(ad.multiplicity == AttrDescMultiplicity.ONE && ad.nullable && ad.valueType == "String") {
+        "id property must always be of type String?"
+    }
     when (ad.type) {
         AttrDescType.PROPERTY -> Unit
         AttrDescType.REFERENCE,

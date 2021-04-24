@@ -36,6 +36,7 @@ abstract class KmfObject {
                     "parameters."
             )
         ial.add(adapter)
+        adapter.onAdapt(this)
         return adapter
     }
 
@@ -204,5 +205,25 @@ abstract class KmfObject {
         attribute: KmfAttribute.List
     ): KmfList<T> {
         return KmfChildrenListImpl(this, attribute)
+    }
+
+    override fun equals(other: Any?) = other === this
+
+    override fun hashCode() = System.identityHashCode(this)
+
+    override fun toString() = buildString {
+        append(kmfClass.kClass.simpleName)
+        append("[")
+        for (attr in kmfClass.allAttributes) {
+            append(attr.kProperty.name)
+            append("=")
+            when (attr.kind) {
+                KmfAttrKind.PROPERTY ->
+                    append(attr.getFrom(this@KmfObject))
+                KmfAttrKind.REFERENCE -> TODO()
+                KmfAttrKind.CHILD -> TODO()
+            }
+        }
+        append("]")
     }
 }

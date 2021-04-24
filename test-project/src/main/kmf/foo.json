@@ -4,6 +4,7 @@
   },
   "classes": {
     "FooData": {
+      "id": "String?",
       "foobar": {
         "type": "test.MyEnum",
         "default": "FOO"
