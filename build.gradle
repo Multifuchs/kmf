@@ -1,65 +1,45 @@
-group 'de.mf.kmf'
-version '0.2-SNAPSHOT'
-
-apply plugin: "idea"
-
-buildscript {
-    ext.kotlin_version = "1.3-M2"
-    ext.emf_version = "2.3.0-v200706262000"
-    ext.ecore_version = "2.15.0"
-
-    repositories {
-        mavenCentral()
-        maven { url "http://dl.bintray.com/kotlin/kotlin-eap" }
-    }
-
-    dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-    }
-}
-
-allprojects {
-    apply plugin: "java"
-    apply plugin: "maven-publish"
-
-    publishing {
-        publications {
-            mavenJava(MavenPublication) {
-                from components.java
-            }
-        }
-    }
-}
-
-subprojects {
-    apply plugin: "kotlin"
-
-    repositories {
-        mavenCentral()
-        maven { url "http://dl.bintray.com/kotlin/kotlin-eap" }
-        maven { url "https://kotlin.bintray.com/kotlinx/" }
-    }
-
-    dependencies {
-        compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    }
-
-    compileKotlin {
-        kotlinOptions.jvmTarget = "1.8"
-    }
-
-    compileTestKotlin {
-        kotlinOptions.jvmTarget = "1.8"
-    }
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version "$kotlin_version"
 }
 
 repositories {
     mavenCentral()
+    jcenter()
 }
 
-idea {
-    module {
-        downloadJavadoc = true
-        downloadSources = true
+group = 'de.mf.kmf'
+version = '0.1-SNAPSHOT'
+
+subprojects {
+    apply plugin: 'org.jetbrains.kotlin.jvm'
+
+    repositories {
+        mavenCentral()
+        jcenter()
     }
+
+    dependencies {
+        testImplementation 'org.jetbrains.kotlin:kotlin-test-testng'
+    }
+
+    compileKotlin {
+        kotlinOptions.jvmTarget = '1.8'
+    }
+
+    compileTestKotlin {
+        kotlinOptions.jvmTarget = '1.8'
+    }
+
+    compileJava {
+        sourceCompatibility = '1.8'
+    }
+
+    compileTestJava {
+        sourceCompatibility = '1.8'
+    }
+
+    test {
+        useTestNG()
+    }
+
 }

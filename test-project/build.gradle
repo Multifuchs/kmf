@@ -1,0 +1,9 @@
+plugins {
+    id 'de.mf.kmf.gradleplugin'
+}
+
+apply plugin: 'de.mf.kmf.gradleplugin'
+
+dependencies {
+    implementation project(':core')
+}
