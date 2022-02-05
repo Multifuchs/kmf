@@ -86,109 +86,6 @@ abstract class KmfObject {
     internal fun internalNotify(notification: KmfNotification) =
         notify(notification)
 
-    protected fun internalSetParent(
-        newParent: KmfObject?,
-        newAttribute: KmfAttribute?,
-        listIndex: Int = -1
-    ) {
-        check((newParent == null) == (newAttribute == null))
-        check(newAttribute == null || newAttribute.kind == KmfAttrKind.CHILD)
-
-        if (this.parent === newParent && this.parentChildAttribute === newAttribute)
-            return
-
-        val oldParent = this.parent
-        val oldAttr = this.parentChildAttribute
-
-        if (newParent === this)
-            throw KmfException(
-                "Can't move this KmfObject to new parent, " +
-                    "because new parent === this KmfObject (object can't be " +
-                    "it's own parent)"
-            )
-        if (newParent?.seqToRoot()?.any { it === this } == true)
-            throw KmfException(
-                "Can't move this KmfObject to new parent, " +
-                    "because the new parent is indirectly a child of this " +
-                    "KmfObject (children-tree recursion)."
-            )
-
-
-        // update values
-        this.parent = newParent
-        this.parentChildAttribute = newAttribute
-
-        if (oldParent != null) {
-            oldAttr!!
-            // remove from old parent
-            when (oldAttr) {
-                is KmfAttribute.Unary -> {
-                    oldParent.internalSetValue(oldAttr, null)
-                    oldParent.notify(
-                        KmfNotification.Set(
-                            oldParent,
-                            oldAttr,
-                            this,
-                            null
-                        )
-                    )
-                }
-                is KmfAttribute.List ->
-                    (oldAttr.getFrom(oldParent) as KmfChildrenListImpl<*>)
-                        .removeWithoutParentNotify(this)
-            }
-        }
-        if (newParent != null) {
-            // add to new parent
-            newAttribute!!
-            when (newAttribute) {
-                is KmfAttribute.Unary -> {
-                    // check if we overwrite a child
-                    val currentChild =
-                        newAttribute.getFrom(newParent) as? KmfObject
-                    if (currentChild != null) {
-                        currentChild.parent = null
-                        currentChild.parentChildAttribute = null
-                        currentChild.notify(
-                            KmfNotification.Parent(
-                                currentChild,
-                                newParent,
-                                null
-                            )
-                        )
-                    }
-
-                    newParent.internalSetValue(newAttribute, this)
-                    newParent.notify(
-                        KmfNotification.Set(
-                            newParent,
-                            newAttribute,
-                            currentChild,
-                            this
-                        )
-                    )
-                }
-                is KmfAttribute.List -> {
-                    val list =
-                        newAttribute.getFrom(newParent) as KmfChildrenListImpl<*>
-                    list.addWithoutParentNotify(this, listIndex)
-                }
-            }
-        }
-
-        if (newParent !== oldParent) {
-            notify(KmfNotification.Parent(this, oldParent, newParent))
-        }
-    }
-
-    internal fun iinternalSetParent(
-        parent: KmfObject?,
-        attribute: KmfAttribute?,
-        listIndex: Int = -1
-    ) {
-        internalSetParent(parent, attribute, listIndex)
-    }
-
     /** Allows sub-classes to create instances of internal type [KmfListImpl]. */
     protected fun <T : Any> createSimpleList(
         attribute: KmfAttribute.List
@@ -216,14 +113,145 @@ abstract class KmfObject {
         append("[")
         for (attr in kmfClass.allAttributes) {
             append(attr.kProperty.name)
-            append("=")
             when (attr.kind) {
                 KmfAttrKind.PROPERTY ->
-                    append(attr.getFrom(this@KmfObject))
-                KmfAttrKind.REFERENCE -> TODO()
-                KmfAttrKind.CHILD -> TODO()
+                    append("=").append(attr.getFrom(this@KmfObject))
+                KmfAttrKind.REFERENCE,
+                KmfAttrKind.CHILD -> {
+                    val value = attr.getFrom(this@KmfObject)
+                    append(if(attr.kind == KmfAttrKind.REFERENCE) "->" else "=>")
+
+                    when(attr) {
+                        is KmfAttribute.Unary -> append((value as? KmfObject)?.idOrNull())
+                        is KmfAttribute.List -> {
+                            append("[")
+                            ((value as? List<*>)?.asSequence() ?: emptySequence())
+                                .filterIsInstance<KmfObject>()
+                                .map { it.idOrNull() }
+                                .filterNotNull()
+                                .forEach { append(it).append(", ") }
+
+                            append("]")
+                        }
+                    }
+                }
             }
+            append(", ")
         }
         append("]")
+    }
+    
+    protected object ProtectedFunctions {
+        fun setParent(
+            child: KmfObject,
+            newParent: KmfObject?,
+            newAttribute: KmfAttribute?,
+            listIndex: Int = -1
+        ) {
+            check((newParent == null) == (newAttribute == null))
+            check(newAttribute == null || newAttribute.kind == KmfAttrKind.CHILD)
+
+            if (child.parent === newParent && child.parentChildAttribute === newAttribute)
+                return
+
+            val oldParent = child.parent
+            val oldAttr = child.parentChildAttribute
+
+            if (newParent === child)
+                throw KmfException(
+                    "Can't move this KmfObject to new parent, " +
+                        "because new parent === this KmfObject (object can't be " +
+                        "it's own parent)"
+                )
+            if (newParent?.seqToRoot()?.any { it === child } == true)
+                throw KmfException(
+                    "Can't move this KmfObject to new parent, " +
+                        "because the new parent is indirectly a child of this " +
+                        "KmfObject (children-tree recursion)."
+                )
+
+
+            // update values
+            child.parent = newParent
+            child.parentChildAttribute = newAttribute
+
+            if (oldParent != null) {
+                oldAttr!!
+                // remove from old parent
+                when (oldAttr) {
+                    is KmfAttribute.Unary -> {
+                        oldParent.internalSetValue(oldAttr, null)
+                        oldParent.notify(
+                            KmfNotification.Set(
+                                oldParent,
+                                oldAttr,
+                                child,
+                                null
+                            )
+                        )
+                    }
+                    is KmfAttribute.List ->
+                        (oldAttr.getFrom(oldParent) as KmfChildrenListImpl<*>)
+                            .removeWithoutParentNotify(child)
+                }
+            }
+            if (newParent != null) {
+                // add to new parent
+                newAttribute!!
+                when (newAttribute) {
+                    is KmfAttribute.Unary -> {
+                        // check if we overwrite a child
+                        val currentChild =
+                            newAttribute.getFrom(newParent) as? KmfObject
+                        if (currentChild != null) {
+                            currentChild.parent = null
+                            currentChild.parentChildAttribute = null
+                            currentChild.notify(
+                                KmfNotification.Parent(
+                                    currentChild,
+                                    newParent,
+                                    null
+                                )
+                            )
+                        }
+
+                        newParent.internalSetValue(newAttribute, child)
+                        newParent.notify(
+                            KmfNotification.Set(
+                                newParent,
+                                newAttribute,
+                                currentChild,
+                                child
+                            )
+                        )
+                    }
+                    is KmfAttribute.List -> {
+                        val list =
+                            newAttribute.getFrom(newParent) as KmfChildrenListImpl<*>
+                        list.addWithoutParentNotify(child, listIndex)
+                    }
+                }
+            }
+
+            if (newParent !== oldParent) {
+                child.notify(KmfNotification.Parent(child, oldParent, newParent))
+            }
+        }
+    }
+
+    internal object InternalFunctions {
+        fun setParent(
+            child: KmfObject,
+            parent: KmfObject?,
+            attribute: KmfAttribute?,
+            listIndex: Int = -1
+        ) {
+            ProtectedFunctions.setParent(
+                child,
+                parent,
+                attribute,
+                listIndex
+            )
+        }
     }
 }

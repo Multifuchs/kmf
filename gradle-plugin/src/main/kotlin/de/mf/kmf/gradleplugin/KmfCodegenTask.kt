@@ -1,6 +1,5 @@
 package de.mf.kmf.gradleplugin
 
-import com.beust.klaxon.KlaxonException
 import de.mf.kmf.codegen.generateKmfCode
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
@@ -8,7 +7,10 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.SourceTask
 import org.gradle.api.tasks.TaskAction
 import java.io.File
-import kotlin.io.path.*
+import kotlin.io.path.ExperimentalPathApi
+import kotlin.io.path.extension
+import kotlin.io.path.isReadable
+import kotlin.io.path.reader
 
 abstract class KmfCodegenTask : SourceTask() {
 
@@ -23,6 +25,7 @@ abstract class KmfCodegenTask : SourceTask() {
     val sourceName: Property<String> =
         project.objects.property(String::class.java)
 
+    @Input
     lateinit var sourceDirectories: List<File>
 
     @ExperimentalPathApi
@@ -35,7 +38,7 @@ abstract class KmfCodegenTask : SourceTask() {
                 .takeIf { it.isReadable() && it.extension == "json" }
                 ?: return@visit
             try {
-                generateKmfCode(file.reader().buffered(), outputDir, logger)
+                generateKmfCode(file.reader().buffered(), outputDir)
             } catch (e: Exception) {
                 throw Exception("Failed to parse json: $file\n${e.message}", e)
             }

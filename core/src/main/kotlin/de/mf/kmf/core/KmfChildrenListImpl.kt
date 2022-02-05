@@ -14,19 +14,19 @@ internal class KmfChildrenListImpl<T : KmfObject>(
 ) {
 
     override fun add(index: Int, element: T) {
-        element.iinternalSetParent(owner, attr, index)
+        KmfObject.InternalFunctions.setParent(element, owner, attr, index)
     }
 
     override fun removeAt(index: Int): T {
         val oldValue = wrapped[index]
-        oldValue.iinternalSetParent(null, null, -1)
+        KmfObject.InternalFunctions.setParent(oldValue, null, null, -1)
         return oldValue
     }
 
     override fun set(index: Int, element: T): T {
         val oldValue = wrapped[index]
         if (oldValue === element) return oldValue
-        oldValue.iinternalSetParent(null, null)
+        KmfObject.InternalFunctions.setParent(oldValue, null, null)
         add(index, element)
         return oldValue
     }

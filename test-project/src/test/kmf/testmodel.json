@@ -1,0 +1,58 @@
+{
+  "package": "de.mf.kmf.test",
+  "imports": {
+  },
+  "classes": {
+    "TestRoot": {
+      "id": "String?",
+      "simpleEnumProp": {
+        "type": "de.mf.kmf.test.TestEnum",
+        "default": "C"
+      },
+      "nullEnumProp": "de.mf.kmf.test.TestEnum?",
+      "listEnumProp": "de.mf.kmf.test.TestEnum[]",
+      "simpleStringProp": "String",
+      "nullStringProp": "String?",
+      "listStringProp": "String[]",
+      "simpleDoubleProp": "Double",
+      "nullDoubleProp": "Double?",
+      "listDoubleProp": "Double[]",
+      "simpleIntProp": "Int",
+      "nullIntProp": "Int?",
+      "listIntProp": "Int[]",
+      "simpleLongProp": "Long",
+      "nullLongProp": "Long?",
+      "listLongProp": "Long[]",
+      "simpleBooleanProp": "Boolean",
+      "nullBooleanProp": "Boolean?",
+      "listBooleanProp": "Boolean[]",
+      "simpleLocalDateProp": "LocalDate",
+      "nullLocalDateProp": "LocalDate?",
+      "listLocalDateProp": "LocalDate[]",
+      "simpleLocalDateTimeProp": "LocalDateTime",
+      "nullLocalDateTimeProp": "LocalDateTime?",
+      "listLocalDateTimeProp": "LocalDateTime[]",
+      "simpleOffsetDateTimeProp": "OffsetDateTime",
+      "nullOffsetDateTimeProp": "OffsetDateTime?",
+      "listOffsetDateTimeProp": "OffsetDateTime[]",
+      "simpleZonedDateTimeProp": "ZonedDateTime",
+      "nullZonedDateTimeProp": "ZonedDateTime?",
+      "listZonedDateTimeProp": "ZonedDateTime[]",
+      "singleRef": "ref TestNodeClass?",
+      "multiRef": "ref TestNodeClass[]",
+      "child": "child TestNodeClass?",
+      "children": "child TestNodeClass[]"
+    },
+    "TestExtendedRoot": {
+      "superClass": "TestRoot",
+      "isExtended": {
+        "type": "Boolean",
+        "default": "true"
+      }
+    },
+    "TestNodeClass": {
+      "name": "String",
+      "children": "child TestNodeClass[]"
+    }
+  }
+}

@@ -1,10 +1,10 @@
 plugins {
-    id 'org.jetbrains.kotlin.jvm' version "$kotlin_version"
+    id 'org.jetbrains.kotlin.jvm' version "$kotlin_version" apply false
+    id "org.javamodularity.moduleplugin" version "1.8.9" apply false
 }
 
 repositories {
     mavenCentral()
-    jcenter()
 }
 
 group = 'de.mf.kmf'
@@ -12,34 +12,35 @@ version = '0.1-SNAPSHOT'
 
 subprojects {
     apply plugin: 'org.jetbrains.kotlin.jvm'
+    apply plugin: 'org.javamodularity.moduleplugin'
 
     repositories {
         mavenCentral()
-        jcenter()
     }
 
     dependencies {
-        testImplementation 'org.jetbrains.kotlin:kotlin-test-testng'
+        testImplementation "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
+        testImplementation 'junit:junit:4.13.2'
     }
 
     compileKotlin {
-        kotlinOptions.jvmTarget = '1.8'
+        kotlinOptions.jvmTarget = "$java_version"
     }
 
     compileTestKotlin {
-        kotlinOptions.jvmTarget = '1.8'
+        kotlinOptions.jvmTarget = "$java_version"
     }
 
     compileJava {
-        sourceCompatibility = '1.8'
+        sourceCompatibility = "$java_version"
     }
 
     compileTestJava {
-        sourceCompatibility = '1.8'
+        sourceCompatibility = "$java_version"
     }
 
     test {
-        useTestNG()
+        useJUnit()
     }
 
 }

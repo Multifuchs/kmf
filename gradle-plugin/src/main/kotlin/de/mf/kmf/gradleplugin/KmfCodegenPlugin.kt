@@ -14,7 +14,7 @@ open class KmfCodegenPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         this.project = project
 
-        project.logger.warn("KMF Apply project")
+//        project.logger.warn("KMF Apply project")
 
         val kotlinPluginHandler =
             { _: Plugin<*> -> existsKotlinPlugin.set(true) }
@@ -59,7 +59,7 @@ open class KmfCodegenPlugin : Plugin<Project> {
                 .singleOrNull { it.sourceSets.singleOrNull() == "commonMain" }
 
             for (source in sources) {
-                project.logger.warn("KMF source: ${source}")
+//                project.logger.warn("KMF source: ${source}")
                 val genSrcDir = File(project.buildDir, "kmf${source.name.capitalize()}")
                 val relGenSrcDir =
                     genSrcDir.toRelativeString(project.projectDir)

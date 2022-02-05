@@ -2,13 +2,10 @@ package de.mf.kmf.codegen
 
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
-import org.slf4j.Logger
 import java.io.Reader
 import java.nio.file.Path
-import java.time.LocalDate
-import java.time.OffsetDateTime
+import java.time.*
 import java.time.format.DateTimeFormatter
-import kotlin.io.path.ExperimentalPathApi
 
 object KmfTypes {
     val KMF_CORE_PACKAGE = "de.mf.kmf.core"
@@ -25,16 +22,15 @@ object KmfTypes {
 
 object PrimitiveTypes {
 
-    private val DATE_TIME_FORMAT = DateTimeFormatter.ISO_OFFSET_DATE_TIME
-    private val DATE_FORMAT = DateTimeFormatter.ISO_DATE
-
     val STRING = String::class.asClassName()
     val INT = Int::class.asClassName()
     val LONG = Long::class.asClassName()
     val DOUBLE = Double::class.asClassName()
-    val BOOLEAN = Int::class.asClassName()
-    val DATE_TIME = OffsetDateTime::class.asClassName()
-    val DATE = LocalDate::class.asClassName()
+    val BOOLEAN = Boolean::class.asClassName()
+    val LOCAL_DATE_TIME = LocalDateTime::class.asClassName()
+    val LOCAL_DATE = LocalDate::class.asClassName()
+    val OFFSET_DATE_TIME = OffsetDateTime::class.asClassName()
+    val ZONED_DATE_TIME = ZonedDateTime::class.asClassName()
 
     fun getByName(name: String) = when (name) {
         "String" -> STRING
@@ -42,8 +38,10 @@ object PrimitiveTypes {
         "Long" -> LONG
         "Double" -> DOUBLE
         "Boolean" -> BOOLEAN
-        "DateTime" -> DATE_TIME
-        "Date" -> DATE
+        "LocalDateTime" -> LOCAL_DATE_TIME
+        "LocalDate" -> LOCAL_DATE
+        "OffsetDateTime" -> OFFSET_DATE_TIME
+        "ZonedDateTime" -> ZONED_DATE_TIME
         else -> null
     }
 
@@ -59,18 +57,42 @@ object PrimitiveTypes {
             BOOLEAN -> (value as? Boolean)
                 ?: value?.toString()?.toBoolean()
                 ?: "false"
-            DATE_TIME -> CodeBlock.of(
-                "%T.parse(%S, %T.ISO_OFFSET_DATE_TIME)",
-                OffsetDateTime::class.java,
-                value.toString(),
-                DateTimeFormatter::class.java
-            )
-            DATE -> CodeBlock.of(
-                "%T.parse(%S, %T.ISO_DATE)",
-                LocalDate::class.java,
-                value.toString(),
-                DateTimeFormatter::class.java
-            )
+            LOCAL_DATE -> if (value == null)
+                CodeBlock.of(
+                    "%T.ofEpochDay(0)",
+                    LocalDate::class.asClassName()
+                )
+            else
+                CodeBlock.of(
+                    "%T.parse(%S, %T.ISO_DATE)",
+                    LocalDate::class.asClassName(),
+                    value.toString(),
+                    DateTimeFormatter::class.asClassName()
+                )
+            LOCAL_DATE_TIME,
+            ZONED_DATE_TIME,
+            OFFSET_DATE_TIME -> {
+                val clazz = when (type) {
+                    LOCAL_DATE_TIME -> LocalDateTime::class.asClassName()
+                    ZONED_DATE_TIME -> ZonedDateTime::class.asClassName()
+                    OFFSET_DATE_TIME -> OffsetDateTime::class.asClassName()
+                    else -> TODO("Support date type: $type")
+                }
+                if (value == null)
+                    CodeBlock.of(
+                        "%T.ofInstant(%T.EPOCH, %T.UTC)",
+                        clazz,
+                        Instant::class.asClassName(),
+                        ZoneOffset::class.asClassName()
+                    )
+                else
+                    CodeBlock.of(
+                        "%T.parse(%S, %T.ISO_OFFSET_DATE_TIME)",
+                        clazz::class.asClassName(),
+                        value.toString(),
+                        DateTimeFormatter::class.asClassName()
+                    )
+            }
             // Assume it is an Enum
             else -> {
                 if (value == null) CodeBlock.of("%T.values().first()", type)
@@ -86,15 +108,18 @@ object PrimitiveTypes {
     }
 }
 
-@ExperimentalPathApi
 fun generateKmfCode(
     jsonInput: Reader,
-    generatedSourceDir: Path,
-    logger: Logger? = null
+    generatedSourceDir: Path
 ) {
     val parsed = jsonInput.use { parseJson(it) }
 
     val fileSpec = FileSpec.builder(parsed.packageName, "Model").apply {
+        addAnnotation(
+            AnnotationSpec.builder(ClassName("", "Suppress"))
+                .addMember("\"RedundantVisibilityModifier, USELESS_CAST\"")
+                .build()
+        )
         parsed.classes.forEach { parsedClass ->
             addType(buildObjectType(parsed, parsedClass))
         }
@@ -108,13 +133,18 @@ private fun buildObjectType(parsedRoot: RootDesc, parsedClass: ClassDesc) =
         modifiers += KModifier.OPEN
         superclass(
             parsedClass.superClass
-                ?.let { buildClassName(parsedRoot, parsedClass.superClass) }
+                ?.let {
+                    buildGenericClassName(
+                        parsedRoot,
+                        parsedClass.superClass
+                    )
+                }
                 ?: KmfTypes.KMF_OBJECT
         )
         parsedClass.attributes.forEach { attrDesc ->
             buildPropertySpecs(
-                parsedRoot,
                 parsedClass,
+                parsedRoot,
                 attrDesc
             ).forEach { ps -> addProperty(ps) }
         }
@@ -157,21 +187,19 @@ private fun buildObjectType(parsedRoot: RootDesc, parsedClass: ClassDesc) =
                         addStatement("${ad.internalPropName} = if (value == null) null")
                         addStatement(
                             "else %T::class.java.cast(value)",
-                            buildClassName(parsedRoot, ad.valueType)
+                            buildAttributeValTypeClassName(parsedRoot, ad)
                         )
                     } else {
                         addStatement(
                             "${ad.internalPropName} = %T::class.java.cast(value)",
-                            buildClassName(parsedRoot, ad.valueType)
+                            buildAttributeValTypeClassName(parsedRoot, ad)
                         )
                     }
-                    addStatement("true")
                     endControlFlow()
                 }
 
                 beginControlFlow("else ->")
                 addStatement("super.internalSetValue(attribute, value)")
-                addStatement("false")
                 endControlFlow() // else ->
                 endControlFlow() // when {
             }
@@ -181,17 +209,20 @@ private fun buildObjectType(parsedRoot: RootDesc, parsedClass: ClassDesc) =
     }.build()
 
 private fun buildPropertySpecs(
-    parsedRoot: RootDesc,
     parsedClass: ClassDesc,
+    parsedRoot: RootDesc,
     attrDesc: AttrDesc
-): List<PropertySpec> {
+): List<PropertySpec> = try {
     val propValueType = when (attrDesc.type) {
-        AttrDescType.PROPERTY ->
-            PrimitiveTypes.getByName(attrDesc.valueType)
-                ?: buildClassName(parsedRoot, attrDesc.valueType)
-
+        AttrDescType.PROPERTY -> buildAttributeValTypeClassName(
+            parsedRoot,
+            attrDesc
+        )
         AttrDescType.REFERENCE,
-        AttrDescType.CHILD -> buildClassName(parsedRoot, attrDesc.valueType)
+        AttrDescType.CHILD -> buildGenericClassName(
+            parsedRoot,
+            attrDesc.valueType
+        )
     }
     val propType = propValueType.let {
         if (attrDesc.multiplicity == AttrDescMultiplicity.MANY)
@@ -249,9 +280,9 @@ private fun buildPropertySpecs(
                         FunSpec.setterBuilder().addParameter("value", propType)
                             .addStatement("if ($internalPropName == value) return")
                             .beginControlFlow("if (value === null)")
-                            .addStatement("$internalPropName!!.internalSetParent(null, null)")
+                            .addStatement("ProtectedFunctions.setParent($internalPropName!!, null, null)")
                             .nextControlFlow("else")
-                            .addStatement("value.internalSetParent(this, KmfClass.${attrDesc.name})")
+                            .addStatement("ProtectedFunctions.setParent(value, this, KmfClass.${attrDesc.name})")
                             .endControlFlow()
                             .build()
                     )
@@ -280,7 +311,12 @@ private fun buildPropertySpecs(
 
     }.build()
 
-    return listOfNotNull(internalProp, mainProp)
+    listOfNotNull(internalProp, mainProp)
+} catch (e: Exception) {
+    throw Exception(
+        "Failed to generate property ${parsedRoot.packageName}.${parsedClass.name}.${attrDesc.name}. ${e.message} (Full Attr Desc: $attrDesc)",
+        e
+    )
 }
 
 private fun buildKmfClassObject(parsedRoot: RootDesc, parsedClass: ClassDesc) =
@@ -291,7 +327,7 @@ private fun buildKmfClassObject(parsedRoot: RootDesc, parsedClass: ClassDesc) =
             CodeBlock.of("null")
         else CodeBlock.of(
             "%T.KmfClass",
-            buildClassName(parsedRoot, parsedClass.superClass)
+            buildGenericClassName(parsedRoot, parsedClass.superClass)
         )
 
         parsedClass.attributes.forEach { ad ->
@@ -305,9 +341,9 @@ private fun buildKmfClassObject(parsedRoot: RootDesc, parsedClass: ClassDesc) =
                     CodeBlock.of(
                         "%T(this, %T::class, %T.$kind, ${ad.nullable}, %T::${ad.name})",
                         attrType,
-                        buildClassName(parsedRoot, ad.valueType),
+                        buildAttributeValTypeClassName(parsedRoot, ad),
                         KmfTypes.KMF_ATTRIBUTE_KIND,
-                        buildClassName(
+                        buildGenericClassName(
                             parsedRoot,
                             parsedClass.name
                         )
@@ -316,9 +352,9 @@ private fun buildKmfClassObject(parsedRoot: RootDesc, parsedClass: ClassDesc) =
                     CodeBlock.of(
                         "%T(this, %T::class, %T.$kind, %T::${ad.name})",
                         attrType,
-                        buildClassName(parsedRoot, ad.valueType),
+                        buildAttributeValTypeClassName(parsedRoot, ad),
                         KmfTypes.KMF_ATTRIBUTE_KIND,
-                        buildClassName(parsedRoot, parsedClass.name)
+                        buildGenericClassName(parsedRoot, parsedClass.name)
                     )
             }
             addProperty(
@@ -342,7 +378,19 @@ private fun buildKmfClassObject(parsedRoot: RootDesc, parsedClass: ClassDesc) =
         )
     }.build()
 
-private fun buildClassName(parsedRoot: RootDesc, name: String): ClassName {
+private fun buildAttributeValTypeClassName(
+    parsedRoot: RootDesc,
+    attrDesc: AttrDesc
+) =
+    PrimitiveTypes.getByName(attrDesc.valueType) ?: buildGenericClassName(
+        parsedRoot,
+        attrDesc.valueType
+    )
+
+private fun buildGenericClassName(
+    parsedRoot: RootDesc,
+    name: String
+): ClassName {
     val lastDot = name.lastIndexOf('.')
     return if (lastDot != -1)
     // Fully qualified classname
