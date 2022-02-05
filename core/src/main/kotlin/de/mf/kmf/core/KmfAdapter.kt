@@ -1,5 +1,7 @@
 package de.mf.kmf.core
 
+import kotlin.reflect.KProperty
+
 /**
  * Adapters can be attached and optionally receive [KmfNotification] from a
  * [KmfObject]. Notifications are sent for all events, which change the state of
@@ -21,61 +23,61 @@ interface KmfAdapter {
     fun onAdapt(obj: KmfObject) = Unit
 }
 
-sealed class KmfNotification(
-    /** The object, whose state altered. */
-    val obj: KmfObject
-) {
+sealed interface KmfNotification {
     /** The attribute of [obj], whose state altered. */
     abstract val attribute: KmfAttribute?
 
+    /** The object, whose state altered. */
+    val obj: KmfObject
+
     /** New value set for an `0..1` attribute. */
-    class Set(
-        obj: KmfObject,
+    data class Set(
+        override val obj: KmfObject,
         override val attribute: KmfAttribute.Unary,
         val oldValue: Any?,
         val newValue: Any?
-    ) : KmfNotification(obj)
+    ) : KmfNotification
 
     /** A value set withing a `0..n` attribute list. */
-    class ListSet(
-        obj: KmfObject,
+    data class ListSet(
+        override val obj: KmfObject,
         override val attribute: KmfAttribute.List,
         val index: Int,
         val oldValue: Any,
         val newValue: Any
-    ) : KmfNotification(obj)
+    ) : KmfNotification
 
     /** A value was moved within the same list. */
-    class ListMove(
-        obj: KmfObject,
+    data class ListMove(
+        override val obj: KmfObject,
         override val attribute: KmfAttribute.List,
         val fromIndex: Int,
         val toIndex: Int,
         val value: Any
-    ) : KmfNotification(obj)
+    ) : KmfNotification
 
     /** A value was inserted into a list. */
-    class ListInsert(
-        obj: KmfObject,
+    data class ListInsert(
+        override val obj: KmfObject,
         override val attribute: KmfAttribute.List,
         val index: Int,
         val value: Any
-    ) : KmfNotification(obj)
+    ) : KmfNotification
 
     /** A value was removed from a list. */
-    class ListRemove(
-        obj: KmfObject,
+    data class ListRemove(
+        override val obj: KmfObject,
         override val attribute: KmfAttribute.List,
         val index: Int,
         val oldValue: Any
-    ) : KmfNotification(obj)
+    ) : KmfNotification
 
     /** The parent of an object changed. */
-    class Parent(
-        obj: KmfObject,
+    data class Parent(
+        override val obj: KmfObject,
         val oldParent: KmfObject?,
         val newParent: KmfObject?
-    ) : KmfNotification(obj) {
+    ) : KmfNotification {
         override val attribute: KmfAttribute? = null
     }
 }
