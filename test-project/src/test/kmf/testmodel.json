@@ -51,6 +51,7 @@
       }
     },
     "TestNodeClass": {
+      "id": "String?",
       "name": "String",
       "children": "child TestNodeClass[]"
     }

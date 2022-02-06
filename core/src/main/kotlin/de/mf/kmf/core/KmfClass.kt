@@ -79,6 +79,8 @@ sealed class KmfAttribute(
     open val kProperty: KProperty1<in KmfObject, Any?> =
         kProperty as KProperty1<in KmfObject, Any?>
 
+    abstract val defaultValue: Any?
+
     lateinit var owner: KmfClass
         internal set
 
@@ -99,6 +101,7 @@ sealed class KmfAttribute(
         kmfClass: KmfClass,
         valueType: KClass<*>,
         kind: KmfAttrKind,
+        override val defaultValue: Any?,
         val nullable: Boolean,
         kProperty: KProperty1<*, *>
     ) : KmfAttribute(kmfClass, valueType, kind, kProperty) {
@@ -132,6 +135,8 @@ sealed class KmfAttribute(
         kind: KmfAttrKind,
         kProperty: KProperty1<*, *>
     ) : KmfAttribute(kmfClass, valueType, kind, kProperty) {
+        override val defaultValue = emptyList<Any>()
+
         override val kProperty: KProperty1<in KmfObject, KmfList<Any>>
             get() = super.kProperty as KProperty1<in KmfObject, KmfList<Any>>
 

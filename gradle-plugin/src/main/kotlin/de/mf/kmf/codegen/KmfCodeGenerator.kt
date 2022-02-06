@@ -213,17 +213,7 @@ private fun buildPropertySpecs(
     parsedRoot: RootDesc,
     attrDesc: AttrDesc
 ): List<PropertySpec> = try {
-    val propValueType = when (attrDesc.type) {
-        AttrDescType.PROPERTY -> buildAttributeValTypeClassName(
-            parsedRoot,
-            attrDesc
-        )
-        AttrDescType.REFERENCE,
-        AttrDescType.CHILD -> buildGenericClassName(
-            parsedRoot,
-            attrDesc.valueType
-        )
-    }
+    val propValueType = propValueType(parsedRoot, attrDesc)
     val propType = propValueType.let {
         if (attrDesc.multiplicity == AttrDescMultiplicity.MANY)
             KmfTypes.kmfList(it)
@@ -240,25 +230,7 @@ private fun buildPropertySpecs(
         // Setup initializer
         modifiers += KModifier.PRIVATE
         mutable()
-        if (attrDesc.type == AttrDescType.PROPERTY) {
-            when {
-                attrDesc.multiplicity == AttrDescMultiplicity.MANY ->
-                    initializer(
-                        "createSimpleList(%T::class.java)",
-                        propValueType
-                    )
-                attrDesc.nullable && attrDesc.defaultValue == null ->
-                    initializer("null")
-                else -> initializer(
-                    PrimitiveTypes.parseDefaultValue(
-                        propValueType,
-                        attrDesc.defaultValue
-                    )
-                )
-            }
-        } else {
-            initializer("null")
-        }
+        initializer(propDefaultValueInitializer(parsedRoot, attrDesc))
     }.build()
         .takeIf { attrDesc.multiplicity == AttrDescMultiplicity.ONE }
 
@@ -339,7 +311,7 @@ private fun buildKmfClassObject(parsedRoot: RootDesc, parsedClass: ClassDesc) =
             val initializer = when (ad.multiplicity) {
                 AttrDescMultiplicity.ONE ->
                     CodeBlock.of(
-                        "%T(this, %T::class, %T.$kind, ${ad.nullable}, %T::${ad.name})",
+                        "%T(this, %T::class, %T.$kind, ${propDefaultValueInitializer(parsedRoot, ad)}, ${ad.nullable}, %T::${ad.name})",
                         attrType,
                         buildAttributeValTypeClassName(parsedRoot, ad),
                         KmfTypes.KMF_ATTRIBUTE_KIND,
@@ -400,6 +372,42 @@ private fun buildGenericClassName(
         // Otherwise take package name from rootDesc
         val importedPackage = parsedRoot.imports[name]
         ClassName(importedPackage ?: parsedRoot.packageName, name)
+    }
+}
+
+private fun propValueType(parsedRoot: RootDesc, attrDesc: AttrDesc) =
+    when (attrDesc.type) {
+        AttrDescType.PROPERTY -> buildAttributeValTypeClassName(
+            parsedRoot,
+            attrDesc
+        )
+        AttrDescType.REFERENCE,
+        AttrDescType.CHILD -> buildGenericClassName(
+            parsedRoot,
+            attrDesc.valueType
+        )
+    }
+
+private fun propDefaultValueInitializer(
+    parsedRoot: RootDesc,
+    attrDesc: AttrDesc
+): CodeBlock {
+    val propValueType = propValueType(parsedRoot, attrDesc)
+    return if (attrDesc.type == AttrDescType.PROPERTY) {
+        when {
+            attrDesc.multiplicity == AttrDescMultiplicity.MANY ->
+                CodeBlock.of(
+                    "createSimpleList(%T::class.java)",
+                    propValueType
+                )
+            attrDesc.nullable && attrDesc.defaultValue == null -> CodeBlock.of("null")
+            else -> PrimitiveTypes.parseDefaultValue(
+                propValueType,
+                attrDesc.defaultValue
+            )
+        }
+    } else {
+        CodeBlock.of("null")
     }
 }
 
