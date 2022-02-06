@@ -17,7 +17,7 @@ class ChildTreeAdapter private constructor(
 
     /** Appends this adapter to */
     private fun adaptObjAndSubTree(kmfObject: KmfObject) {
-        kmfObject.childTree {
+        kmfObject.iterateChildTree {
             if (kmfObject.adapterOrNull<ChildTreeAdapter>() != null)
                 throw KmfException(
                     "${ChildTreeAdapter::class.simpleName} " +

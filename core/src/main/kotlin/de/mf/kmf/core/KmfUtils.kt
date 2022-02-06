@@ -81,19 +81,24 @@ fun KmfObject.idOrNull(): String? = kmfClass.id?.getFrom(this) as String?
 /**
  * Transitively iterates over all children.
  */
-fun KmfObject.childTree(predicate: (KmfObject) -> Boolean) {
+fun KmfObject.iterateChildTree(
+    includeThis: Boolean = false,
+    predicate: (KmfObject) -> Boolean
+) {
+    if (includeThis && !predicate(this)) return
+
     for (childAttr in kmfClass.allChildren) {
         when (childAttr) {
             is KmfAttribute.Unary -> {
                 val child = childAttr.getFrom(this) as? KmfObject
                 if (child != null && predicate(child))
-                    child.childTree(predicate)
+                    child.iterateChildTree(false, predicate)
             }
             is KmfAttribute.List -> {
                 val list = childAttr.getFrom(this)
                 for (child in list) {
                     if (child is KmfObject && predicate(child))
-                        child.childTree(predicate)
+                        child.iterateChildTree(false, predicate)
                 }
             }
         }
