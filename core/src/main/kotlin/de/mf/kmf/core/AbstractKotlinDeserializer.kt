@@ -54,11 +54,11 @@ abstract class AbstractKotlinDeserializer {
             "startAttribute called without active kmfObject."
         }
         check(head.curAttr == null) {
-            "startAttribute called with an currently active attribute: ${head.obj.debugPath()}.${head.curAttr!!.kProperty.name}"
+            "startAttribute called with an currently active attribute: ${head.obj.debugPath()}.${head.curAttr!!.name}"
         }
 
         head.curAttr = head.obj.kmfClass.allAttributes
-            .firstOrNull { it.kProperty.name == name }
+            .firstOrNull { it.name == name }
             ?: throw IllegalStateException("${head.obj.debugPath()} (${head.obj.kmfClass.kClass.qualifiedName}) doesn't have the attribute $name .")
         head.curAttrMissingRefs = 0
 
@@ -81,10 +81,7 @@ abstract class AbstractKotlinDeserializer {
             )
             head.curAttrMissingRefs++
         } else {
-            when (attr) {
-                is KmfAttribute.Unary -> attr.kProperty.set(head.obj, resolved)
-                is KmfAttribute.List -> attr.get(head.obj).add(resolved)
-            }
+            attr.addOrSet(head.obj, resolved)
         }
     }
 
@@ -112,15 +109,7 @@ abstract class AbstractKotlinDeserializer {
 
     private fun unsafeAddValueToHead(value: Any?) {
         val (head, attribute) = getCurAttribute()
-        when (attribute) {
-            is KmfAttribute.Unary -> {
-                attribute.kProperty.set(head.obj, value)
-            }
-            is KmfAttribute.List -> attribute.get(head.obj).add(
-                checkNotNull(value) {
-                    "Cannot add null to KmfList ${head.obj.debugPath()}.${attribute.kProperty.name}."
-                })
-        }
+        attribute.addOrSet(head.obj, value)
     }
 
     private fun resolveUnresolved(rootObj: KmfObject) {
@@ -130,11 +119,11 @@ abstract class AbstractKotlinDeserializer {
         for (unresolved in unresolvedRefs) {
             val resolvedObj = rootObjResolver.resolve(unresolved.path)
             checkNotNull(resolvedObj) {
-                "Cannot resolve object referenced by ${unresolved.obj.debugPath()}.${unresolved.attribute.kProperty.name} with path ${unresolved.path} ."
+                "Cannot resolve object referenced by ${unresolved.obj.debugPath()}.${unresolved.attribute.name} with path ${unresolved.path} ."
             }
 
             when (unresolved.attribute) {
-                is KmfAttribute.Unary -> unresolved.attribute.kProperty.set(
+                is KmfAttribute.Unary -> unresolved.attribute.set(
                     unresolved.obj,
                     resolvedObj
                 )

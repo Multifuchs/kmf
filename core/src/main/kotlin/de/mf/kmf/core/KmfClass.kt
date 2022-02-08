@@ -95,6 +95,7 @@ sealed class KmfAttribute(
     abstract val defaultValue: Any?
 
     val name = kProperty.name
+    val qualifiedName by lazy { "$owner::${name}" }
 
     lateinit var owner: KmfClass
         internal set
@@ -121,7 +122,7 @@ sealed class KmfAttribute(
 
     override fun hashCode(): Int = System.identityHashCode(this)
 
-    override fun toString() = "$owner::${name}"
+    override fun toString() = qualifiedName
 
     protected fun requireValueType(value: Any?) {
         require(isOfValueType(value)) {

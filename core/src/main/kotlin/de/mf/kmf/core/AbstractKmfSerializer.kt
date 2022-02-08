@@ -121,7 +121,7 @@ abstract class AbstractKmfSerializer {
                         }
                     } catch (e: Exception) {
                         throw KmfException(
-                            "Failed to serialize ${head.obj.debugPath()}.${attr.kProperty.name}",
+                            "Failed to serialize ${head.obj.debugPath()}.${attr.name}",
                             e
                         )
                     }

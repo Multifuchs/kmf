@@ -19,7 +19,7 @@ fun KmfObject.path(): String = buildString {
 
     for (i in (lastWithId + 1)..objPath.lastIndex) {
         val pcAttr = objPath[i].parentChildAttribute!!
-        append(".").append(pcAttr.kProperty.name)
+        append(".").append(pcAttr.name)
         if (pcAttr is KmfAttribute.List) {
             val parentChildList = pcAttr.get(objPath[i - 1])
             val indexInParentChildList = parentChildList.indexOf(objPath[i])
@@ -68,7 +68,7 @@ class KmfResolver(
             val propName = match.groupValues[1]
             val propIndex = match.groupValues[2]
             val attr = cur.kmfClass.allChildren.firstOrNull {
-                it.kProperty.name == propName
+                it.name == propName
             }
             requireNotNull(attr) {
                 "$debugPath not found: $propName is not a member of ${cur.kmfClass.kClass.qualifiedName}"

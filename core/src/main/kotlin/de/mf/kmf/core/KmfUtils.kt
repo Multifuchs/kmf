@@ -54,7 +54,7 @@ fun KmfObject.debugPath(
 
         if (next != null) {
             val attr = next.parentChildAttribute!!
-            append(".").append(attr.kProperty.name)
+            append(".").append(attr.name)
             if (attr is KmfAttribute.List) {
                 append("[")
                 append(attr.get(cur).indexOf(next))

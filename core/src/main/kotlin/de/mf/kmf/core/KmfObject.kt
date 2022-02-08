@@ -185,7 +185,7 @@ abstract class KmfObject {
         append(kmfClass.kClass.simpleName)
         append("[")
         for (attr in kmfClass.allAttributes) {
-            append(attr.kProperty.name)
+            append(attr.name)
             when (attr.kind) {
                 KmfAttrKind.PROPERTY ->
                     append("=").append(attr.get(this@KmfObject))
