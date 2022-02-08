@@ -81,15 +81,15 @@ class KmfResolver(
                 is KmfAttribute.List -> {
                     val propIntIndex = propIndex.toIntOrNull()
                     requireNotNull(propIntIndex) { "Missing index in path: $debugPath" }
-                    attr.getFrom(cur).getOrNull(propIntIndex) as KmfObject?
+                    val list = attr.getFrom(cur)
+                    val e = list.getOrNull(propIntIndex) as KmfObject?
+                    e
                 }
-            }
-            requireNotNull(next) {
-                "Cannot resolve $debugPath."
-            }
+            } ?: return null
 
             cur = next
         }
+
         return cur
     }
 }

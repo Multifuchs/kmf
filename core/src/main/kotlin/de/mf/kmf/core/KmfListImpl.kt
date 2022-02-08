@@ -72,4 +72,13 @@ internal open class KmfListImpl<T : Any>(
         return false
     }
 
+    override fun equals(other: Any?): Boolean {
+        if (other !is KmfList<*> || size != other.size) return false
+        for (i in 0..lastIndex) {
+            if (this[i] != other[i])
+                return false
+        }
+        return true
+    }
+
 }

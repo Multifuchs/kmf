@@ -104,7 +104,80 @@ abstract class KmfObject {
         return KmfChildrenListImpl(this, attribute)
     }
 
-    override fun equals(other: Any?) = other === this
+    infix fun deepEquals(other: KmfObject?): Boolean {
+        if (other?.kmfClass !== kmfClass) return false
+        for (propAttr in kmfClass.allProperties) {
+            if (propAttr.getFrom(this) != propAttr.getFrom(other))
+                return false
+        }
+        for (refAttr in kmfClass.allReferences) {
+            val (thisRefValues, otherRefValues) = when (refAttr) {
+                is KmfAttribute.Unary ->
+                    listOf(refAttr.getFrom(this) as KmfObject?) to listOf(
+                        refAttr.getFrom(other) as KmfObject?
+                    )
+                is KmfAttribute.List ->
+                    (refAttr.getFrom(this) as List<KmfObject?>) to (refAttr.getFrom(
+                        other
+                    ) as List<KmfObject?>)
+            }
+            if (thisRefValues.size != otherRefValues.size) return false
+            for (i in 0..thisRefValues.lastIndex) {
+                val trv = thisRefValues[i]
+                val orv = otherRefValues[i]
+                if ((trv == null) != (orv == null)) return false
+                if (trv != null && orv != null) {
+                    // There are two types of reference values:
+                    // 1 Those which live in the same tree as the object referencing it.
+                    // 2 Those which live in a foreign tree
+                    val isTrfForeign = trv.root !== this.root
+                    val isOrfForeign = orv.root !== other.root
+                    if (isTrfForeign != isOrfForeign) return false
+                    if (isTrfForeign) {
+                        if (trv !== orv)
+                            return false
+                    } else {
+                        // Referenced values in the same tree as object referencing them.
+                        // Both are considered equal if their location is the same within the tree.
+                        var curT: KmfObject = trv
+                        var curO: KmfObject = orv
+                        while (true) {
+                            if ((curT.parent == null) != (curO.parent == null))
+                                return false
+                            if (curT.parentChildAttribute !== curO.parentChildAttribute)
+                                return false;
+                            curT = curT.parent ?: break
+                            curO = curO.parent!!
+                        }
+                    }
+                }
+            }
+        }
+        for (childAttr in kmfClass.allChildren) {
+            val (thisChildValues, otherChildValues) = when (childAttr) {
+                is KmfAttribute.Unary ->
+                    listOf(childAttr.getFrom(this) as KmfObject?) to listOf(
+                        childAttr.getFrom(other) as KmfObject?
+                    )
+                is KmfAttribute.List ->
+                    (childAttr.getFrom(this) as List<KmfObject?>) to (childAttr.getFrom(
+                        other
+                    ) as List<KmfObject?>)
+            }
+            if (thisChildValues.size != otherChildValues.size)
+                return false
+            for (i in 0..thisChildValues.lastIndex) {
+                val tcv = thisChildValues[i]
+                val ocv = otherChildValues[i]
+                if ((tcv == null) != (ocv == null))
+                    return false
+                if (tcv != null && !(tcv deepEquals ocv))
+                    return false
+            }
+        }
+
+        return true
+    }
 
     override fun hashCode() = System.identityHashCode(this)
 
@@ -119,13 +192,14 @@ abstract class KmfObject {
                 KmfAttrKind.REFERENCE,
                 KmfAttrKind.CHILD -> {
                     val value = attr.getFrom(this@KmfObject)
-                    append(if(attr.kind == KmfAttrKind.REFERENCE) "->" else "=>")
+                    append(if (attr.kind == KmfAttrKind.REFERENCE) "->" else "=>")
 
-                    when(attr) {
+                    when (attr) {
                         is KmfAttribute.Unary -> append((value as? KmfObject)?.idOrNull())
                         is KmfAttribute.List -> {
                             append("[")
-                            ((value as? List<*>)?.asSequence() ?: emptySequence())
+                            ((value as? List<*>)?.asSequence()
+                                ?: emptySequence())
                                 .filterIsInstance<KmfObject>()
                                 .map { it.idOrNull() }
                                 .filterNotNull()
@@ -140,7 +214,7 @@ abstract class KmfObject {
         }
         append("]")
     }
-    
+
     protected object ProtectedFunctions {
         fun setParent(
             child: KmfObject,
@@ -234,7 +308,13 @@ abstract class KmfObject {
             }
 
             if (newParent !== oldParent) {
-                child.notify(KmfNotification.Parent(child, oldParent, newParent))
+                child.notify(
+                    KmfNotification.Parent(
+                        child,
+                        oldParent,
+                        newParent
+                    )
+                )
             }
         }
     }

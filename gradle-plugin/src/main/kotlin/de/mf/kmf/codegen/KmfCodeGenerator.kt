@@ -294,6 +294,7 @@ private fun buildPropertySpecs(
 private fun buildKmfClassObject(parsedRoot: RootDesc, parsedClass: ClassDesc) =
     TypeSpec.objectBuilder("KmfClass").apply {
         superclass(KmfTypes.KMF_CLASS)
+        modifiers += KModifier.COMPANION
         superclassConstructorParameters += CodeBlock.of("${parsedClass.name}::class")
         superclassConstructorParameters += if (parsedClass.superClass == null)
             CodeBlock.of("null")

@@ -3,6 +3,8 @@ package de.mf.kmf.core
 import kotlin.reflect.KClass
 import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.KProperty1
+import kotlin.reflect.full.companionObjectInstance
+import kotlin.reflect.full.isSubclassOf
 
 /** Contains reflective information about [KmfObject]. */
 abstract class KmfClass(
