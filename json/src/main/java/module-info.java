@@ -1,7 +1,7 @@
-module kmf.testproject {
+module kmf.json {
     requires kotlin.stdlib;
     requires kotlin.reflect;
-    requires kotlin.test.junit;
     requires kmf.core;
-    requires kmf.json;
+    requires java.json;
+    exports de.mf.kmf.json;
 }

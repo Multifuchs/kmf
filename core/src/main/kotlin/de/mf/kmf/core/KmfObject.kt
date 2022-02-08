@@ -105,7 +105,8 @@ abstract class KmfObject {
     }
 
     infix fun deepEquals(other: KmfObject?): Boolean {
-        if (other?.kmfClass !== kmfClass) return false
+        if (other?.kmfClass !== kmfClass)
+            return false
         for (propAttr in kmfClass.allProperties) {
             if (propAttr.get(this) != propAttr.get(other))
                 return false
@@ -121,7 +122,8 @@ abstract class KmfObject {
                         other
                     ) as List<KmfObject?>)
             }
-            if (thisRefValues.size != otherRefValues.size) return false
+            if (thisRefValues.size != otherRefValues.size)
+                return false
             for (i in 0..thisRefValues.lastIndex) {
                 val trv = thisRefValues[i]
                 val orv = otherRefValues[i]
@@ -132,7 +134,8 @@ abstract class KmfObject {
                     // 2 Those which live in a foreign tree
                     val isTrfForeign = trv.root !== this.root
                     val isOrfForeign = orv.root !== other.root
-                    if (isTrfForeign != isOrfForeign) return false
+                    if (isTrfForeign != isOrfForeign)
+                        return false
                     if (isTrfForeign) {
                         if (trv !== orv)
                             return false

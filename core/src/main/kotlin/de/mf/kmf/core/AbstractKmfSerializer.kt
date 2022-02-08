@@ -1,7 +1,13 @@
 package de.mf.kmf.core
 
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import java.util.*
 import kotlin.collections.AbstractList
+import kotlin.reflect.KClass
 
 abstract class AbstractKmfSerializer {
 
@@ -62,7 +68,12 @@ abstract class AbstractKmfSerializer {
         serializedParents: List<KmfObject>
     ) = Unit
 
+    protected open fun finishSerialization() = Unit
+
     protected fun execSerialize(obj: KmfObject) {
+        requireNotNull(obj.idOrNull()) {
+            "KmfObject to be serialized must have an id."
+        }
         class SerObj(
             val obj: KmfObject
         ) {
@@ -89,21 +100,27 @@ abstract class AbstractKmfSerializer {
                 attrLoop@ for (attr in head.obj.kmfClass.allAttributes) {
                     if (attr.kind == KmfAttrKind.CHILD) continue@attrLoop
                     val value = attr.get(head.obj)
-                    if (ignoreDefaultValues && value == attr.defaultValue)
-                        continue@attrLoop
 
                     try {
                         when (attr.kind) {
                             KmfAttrKind.PROPERTY -> when (attr) {
-                                is KmfAttribute.Unary -> onSimpleProperty(
-                                    head.obj, attr, attr.get(head.obj),
-                                    parentList
-                                )
-                                is KmfAttribute.List -> onSimpleListProperty(
-                                    head.obj, attr,
-                                    attr.get(head.obj) as List<Any>,
-                                    parentList
-                                )
+                                is KmfAttribute.Unary -> {
+                                    val value = attr.get(head.obj)
+                                    if (!ignoreDefaultValues || value != attr.defaultValue)
+                                        onSimpleProperty(
+                                            head.obj, attr, value,
+                                            parentList
+                                        )
+                                }
+                                is KmfAttribute.List -> {
+                                    val list = attr.get(head.obj)
+                                    if (!ignoreDefaultValues || list.isNotEmpty())
+                                        onSimpleListProperty(
+                                            head.obj, attr,
+                                            list,
+                                            parentList
+                                        )
+                                }
                             }
                             KmfAttrKind.REFERENCE -> when (attr) {
                                 is KmfAttribute.Unary -> onReferenceProperty(
@@ -169,6 +186,66 @@ abstract class AbstractKmfSerializer {
             // Serialize next object.
             stack.addLast(SerObj(nextChild))
         }
+
+        finishSerialization()
+    }
+
+    /** Converts a simple value into its string representation. */
+    interface ValueSerializer<T : Any> {
+        val valueType: KClass<T>
+        fun serialize(value: T): String
+        fun deserialize(string: String): T
+    }
+
+    object Serializer {
+
+        val all = listOf(
+            localDate, localDateTime, offsetDateTime, zonedDateTime
+        )
+
+        object localDate : ValueSerializer<LocalDate> {
+            override val valueType = LocalDate::class
+
+            override fun serialize(value: LocalDate) =
+                value.format(DateTimeFormatter.ISO_LOCAL_DATE)
+
+            override fun deserialize(string: String) = LocalDate.parse(
+                string, DateTimeFormatter.ISO_LOCAL_DATE
+            )
+        }
+
+        object localDateTime : ValueSerializer<LocalDateTime> {
+            override val valueType = LocalDateTime::class
+            override fun serialize(value: LocalDateTime) =
+                value.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+
+            override fun deserialize(string: String) = LocalDateTime.parse(
+                string, DateTimeFormatter.ISO_LOCAL_DATE_TIME
+            )
+        }
+
+        object offsetDateTime : ValueSerializer<OffsetDateTime> {
+            override val valueType = OffsetDateTime::class
+
+            override fun serialize(value: OffsetDateTime) =
+                value.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+
+            override fun deserialize(string: String) = OffsetDateTime.parse(
+                string, DateTimeFormatter.ISO_OFFSET_DATE_TIME
+            )
+        }
+
+        object zonedDateTime : ValueSerializer<ZonedDateTime> {
+            override val valueType = ZonedDateTime::class
+
+            override fun serialize(value: ZonedDateTime) =
+                value.format(DateTimeFormatter.ISO_ZONED_DATE_TIME)
+
+            override fun deserialize(string: String) = ZonedDateTime.parse(
+                string, DateTimeFormatter.ISO_ZONED_DATE_TIME
+            )
+        }
+
     }
 
 }

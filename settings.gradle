@@ -2,3 +2,4 @@ rootProject.name = 'kmf'
 includeBuild('gradle-plugin')
 include('test-project')
 include('core')
+include('json')

@@ -3,19 +3,14 @@ package de.mf.kmf.core
 import java.util.*
 import kotlin.reflect.full.primaryConstructor
 
-abstract class AbstractKotlinDeserializer {
+class KmfDeserializerTool {
 
-    protected var resolver: KmfResolver? = null
+    var resolver: KmfResolver? = null
 
     private val unresolvedRefs = mutableListOf<UnresolvedRef>()
     private val stack = LinkedList<StackElement>()
 
-    protected fun reset() {
-        unresolvedRefs.clear()
-        stack.clear()
-    }
-
-    protected fun startObject(clazz: KmfClass): KmfObject {
+    fun startObject(clazz: KmfClass): KmfObject {
         val instance = clazz.kClass.primaryConstructor!!.call()
 
         // Add instance to its parent, which is the current head.
@@ -30,7 +25,7 @@ abstract class AbstractKotlinDeserializer {
         return instance
     }
 
-    protected fun endObject(): KmfObject {
+    fun endObject(): KmfObject {
         check(stack.isNotEmpty()) {
             "endObject is called without previous corresponding startObject."
         }
@@ -42,19 +37,15 @@ abstract class AbstractKotlinDeserializer {
             // As the last step we must resolve unresolved references,
             // because now, we know all objects.
             resolveUnresolved(removed.obj)
-            reset()
         }
 
         return removed.obj
     }
 
-    protected fun startAttribute(name: String): KmfAttribute {
+    fun startAttribute(name: String): KmfAttribute {
         val head = stack.peekLast()
         checkNotNull(head) {
             "startAttribute called without active kmfObject."
-        }
-        check(head.curAttr == null) {
-            "startAttribute called with an currently active attribute: ${head.obj.debugPath()}.${head.curAttr!!.name}"
         }
 
         head.curAttr = head.obj.kmfClass.allAttributes
@@ -65,11 +56,11 @@ abstract class AbstractKotlinDeserializer {
         return head.curAttr!!
     }
 
-    protected fun addSimpleValue(value: Any?) {
+    fun addSimpleValue(value: Any?) {
         unsafeAddValueToHead(value)
     }
 
-    protected fun addReferenceValue(path: String) {
+    fun addReferenceValue(path: String) {
         val (head, attr) = getCurAttribute()
         val resolved = resolver?.resolve(path)
         if (resolved == null) {
@@ -83,18 +74,6 @@ abstract class AbstractKotlinDeserializer {
         } else {
             attr.addOrSet(head.obj, resolved)
         }
-    }
-
-    protected fun endAttribute() {
-        val head = stack.peekLast()
-        checkNotNull(head) {
-            "endAttribute called without active kmfObject."
-        }
-        checkNotNull(head.curAttr) {
-            "endAttribute called without active attribute."
-        }
-        head.curAttr = null
-        head.curAttrMissingRefs = 0
     }
 
     private fun getCurAttribute(): Pair<StackElement, KmfAttribute> {

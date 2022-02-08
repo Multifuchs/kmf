@@ -61,6 +61,14 @@ abstract class KmfClass(
     }
 }
 
+val KClass<out KmfClass>.kmf
+    get() = objectInstance!!
+
+val KClass<out KmfObject>.kmfClass
+    get() = nestedClasses
+        .first { it.isSubclassOf(KmfClass::class) && it.objectInstance != null }
+        .objectInstance as KmfClass
+
 enum class KmfAttrKind {
     /** Simple primitive value. */
     PROPERTY,
