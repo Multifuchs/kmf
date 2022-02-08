@@ -88,7 +88,7 @@ abstract class AbstractKmfSerializer {
                 startObject(head.obj, parentList)
                 attrLoop@ for (attr in head.obj.kmfClass.allAttributes) {
                     if (attr.kind == KmfAttrKind.CHILD) continue@attrLoop
-                    val value = attr.getFrom(head.obj)
+                    val value = attr.get(head.obj)
                     if (ignoreDefaultValues && value == attr.defaultValue)
                         continue@attrLoop
 
@@ -96,24 +96,24 @@ abstract class AbstractKmfSerializer {
                         when (attr.kind) {
                             KmfAttrKind.PROPERTY -> when (attr) {
                                 is KmfAttribute.Unary -> onSimpleProperty(
-                                    head.obj, attr, attr.getFrom(head.obj),
+                                    head.obj, attr, attr.get(head.obj),
                                     parentList
                                 )
                                 is KmfAttribute.List -> onSimpleListProperty(
                                     head.obj, attr,
-                                    attr.getFrom(head.obj) as List<Any>,
+                                    attr.get(head.obj) as List<Any>,
                                     parentList
                                 )
                             }
                             KmfAttrKind.REFERENCE -> when (attr) {
                                 is KmfAttribute.Unary -> onReferenceProperty(
                                     head.obj, attr,
-                                    attr.getFrom(head.obj) as KmfObject?,
+                                    attr.get(head.obj) as KmfObject?,
                                     parentList
                                 )
                                 is KmfAttribute.List -> onReferenceListProperty(
                                     head.obj, attr,
-                                    attr.getFrom(head.obj) as List<KmfObject>,
+                                    attr.get(head.obj) as List<KmfObject>,
                                     parentList
                                 )
                             }
@@ -142,11 +142,11 @@ abstract class AbstractKmfSerializer {
 
             val children = when (childAttr) {
                 is KmfAttribute.Unary -> {
-                    val child = childAttr.getFrom(head.obj)
+                    val child = childAttr.get(head.obj)
                     if (child == null) emptyList()
                     else listOf(child as KmfObject)
                 }
-                is KmfAttribute.List -> childAttr.getFrom(head.obj) as List<KmfObject>
+                is KmfAttribute.List -> childAttr.get(head.obj) as List<KmfObject>
             }
 
             if (head.curChild == 0 && (!ignoreDefaultValues || children.isNotEmpty()))

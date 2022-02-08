@@ -41,6 +41,17 @@ abstract class KmfClass(
         a.owner = this
     }
 
+    fun isSuperclassOf(other: KmfClass): Boolean {
+        var cur = other
+        while (true) {
+            if (cur === this) return true
+            cur = cur.superClass ?: break
+        }
+        return false
+    }
+
+    fun isSubclassOf(other: KmfClass) = other.isSuperclassOf(this)
+
     override fun equals(other: Any?) = this === other
 
     override fun hashCode() = System.identityHashCode(this)
@@ -83,20 +94,46 @@ sealed class KmfAttribute(
 
     abstract val defaultValue: Any?
 
+    val name = kProperty.name
+
     lateinit var owner: KmfClass
         internal set
 
-    open fun getFrom(obj: KmfObject): Any? {
-        if (!owner.kClass.isInstance(obj))
-            throw KmfException("The given object ")
-        return kProperty.get(obj)
-    }
+    fun isMemberOf(kmfClass: KmfClass) =
+        this.kmfClass.isSuperclassOf(kmfClass)
+
+    fun isMemberOf(obj: KmfObject) =
+        isMemberOf(obj.kmfClass)
+
+    abstract fun get(obj: KmfObject): Any?
+
+    abstract fun getAsList(obj: KmfObject): kotlin.collections.List<Any>
+
+    /** If the attribute is [Unary], the value is set. If it's [List], the value will be added. */
+    abstract fun addOrSet(obj: KmfObject, value: Any?)
+
+    /** Sets the attribute to its initial state. */
+    abstract fun unset(obj: KmfObject)
+
+    abstract fun isOfValueType(value: Any?): Boolean
 
     override fun equals(other: Any?) = this === other
 
     override fun hashCode(): Int = System.identityHashCode(this)
 
-    override fun toString() = "$owner::${kProperty.name}"
+    override fun toString() = "$owner::${name}"
+
+    protected fun requireValueType(value: Any?) {
+        require(isOfValueType(value)) {
+            "Cannot assign ${value?.javaClass ?: "null"} to $this."
+        }
+    }
+
+    protected fun requireObjType(obj: KmfObject) {
+        require(isMemberOf(obj)) {
+            "$this is not a member of ${obj.kmfClass}."
+        }
+    }
 
     /** 0..1 */
     class Unary(
@@ -111,23 +148,33 @@ sealed class KmfAttribute(
         override val kProperty: KMutableProperty1<in KmfObject, Any?> =
             super.kProperty as KMutableProperty1<in KmfObject, Any?>
 
-        /**
-         * @param obj
-         * @param value
-         * @throws KmfException if the given
-         */
-        @Throws(KmfException::class)
-        fun setAt(obj: KmfObject, value: Any?): Any? {
-            if (value == null) {
-                if (!nullable) throw KmfException("Failed to set value null, because $this isn't nullable.")
-                kProperty.set(obj, null)
-            }
-            if (!valueType.isInstance(value))
-                throw KmfException("Failed to set value, because $this expects the type $valueType.")
-            val old = kProperty.get(obj)
+        fun set(obj: KmfObject, value: Any?) {
+            requireObjType(obj)
+            requireValueType(value)
             kProperty.set(obj, value)
-            return old
         }
+
+        override fun get(obj: KmfObject): Any? {
+            requireObjType(obj)
+            return kProperty.get(obj)
+        }
+
+        override fun getAsList(obj: KmfObject): kotlin.collections.List<Any> {
+            val value = get(obj)
+            return if (value == null) emptyList() else listOf(value)
+        }
+
+        override fun addOrSet(obj: KmfObject, value: Any?) {
+            set(obj, value)
+        }
+
+        override fun unset(obj: KmfObject) {
+            set(obj, if (nullable) null else defaultValue)
+        }
+
+        override fun isOfValueType(value: Any?) =
+            (value == null && this.nullable)
+                || (value != null && valueType.isInstance(value))
     }
 
     /** 0..n */
@@ -142,8 +189,25 @@ sealed class KmfAttribute(
         override val kProperty: KProperty1<in KmfObject, KmfList<Any>>
             get() = super.kProperty as KProperty1<in KmfObject, KmfList<Any>>
 
-        override fun getFrom(obj: KmfObject): KmfList<Any> {
+        override fun get(obj: KmfObject): KmfList<Any> {
+            requireObjType(obj)
             return kProperty.get(obj)
         }
+
+        override fun getAsList(obj: KmfObject): kotlin.collections.List<Any> {
+            return get(obj)
+        }
+
+        override fun addOrSet(obj: KmfObject, value: Any?) {
+            requireValueType(value)
+            get(obj).add(value!!)
+        }
+
+        override fun unset(obj: KmfObject) {
+            get(obj).clear()
+        }
+
+        override fun isOfValueType(value: Any?) =
+            value != null && valueType.isInstance(value)
     }
 }

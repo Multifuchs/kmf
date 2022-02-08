@@ -107,17 +107,17 @@ abstract class KmfObject {
     infix fun deepEquals(other: KmfObject?): Boolean {
         if (other?.kmfClass !== kmfClass) return false
         for (propAttr in kmfClass.allProperties) {
-            if (propAttr.getFrom(this) != propAttr.getFrom(other))
+            if (propAttr.get(this) != propAttr.get(other))
                 return false
         }
         for (refAttr in kmfClass.allReferences) {
             val (thisRefValues, otherRefValues) = when (refAttr) {
                 is KmfAttribute.Unary ->
-                    listOf(refAttr.getFrom(this) as KmfObject?) to listOf(
-                        refAttr.getFrom(other) as KmfObject?
+                    listOf(refAttr.get(this) as KmfObject?) to listOf(
+                        refAttr.get(other) as KmfObject?
                     )
                 is KmfAttribute.List ->
-                    (refAttr.getFrom(this) as List<KmfObject?>) to (refAttr.getFrom(
+                    (refAttr.get(this) as List<KmfObject?>) to (refAttr.get(
                         other
                     ) as List<KmfObject?>)
             }
@@ -156,11 +156,11 @@ abstract class KmfObject {
         for (childAttr in kmfClass.allChildren) {
             val (thisChildValues, otherChildValues) = when (childAttr) {
                 is KmfAttribute.Unary ->
-                    listOf(childAttr.getFrom(this) as KmfObject?) to listOf(
-                        childAttr.getFrom(other) as KmfObject?
+                    listOf(childAttr.get(this) as KmfObject?) to listOf(
+                        childAttr.get(other) as KmfObject?
                     )
                 is KmfAttribute.List ->
-                    (childAttr.getFrom(this) as List<KmfObject?>) to (childAttr.getFrom(
+                    (childAttr.get(this) as List<KmfObject?>) to (childAttr.get(
                         other
                     ) as List<KmfObject?>)
             }
@@ -188,10 +188,10 @@ abstract class KmfObject {
             append(attr.kProperty.name)
             when (attr.kind) {
                 KmfAttrKind.PROPERTY ->
-                    append("=").append(attr.getFrom(this@KmfObject))
+                    append("=").append(attr.get(this@KmfObject))
                 KmfAttrKind.REFERENCE,
                 KmfAttrKind.CHILD -> {
-                    val value = attr.getFrom(this@KmfObject)
+                    val value = attr.get(this@KmfObject)
                     append(if (attr.kind == KmfAttrKind.REFERENCE) "->" else "=>")
 
                     when (attr) {
@@ -265,7 +265,7 @@ abstract class KmfObject {
                         )
                     }
                     is KmfAttribute.List ->
-                        (oldAttr.getFrom(oldParent) as KmfChildrenListImpl<*>)
+                        (oldAttr.get(oldParent) as KmfChildrenListImpl<*>)
                             .removeWithoutParentNotify(child)
                 }
             }
@@ -276,7 +276,7 @@ abstract class KmfObject {
                     is KmfAttribute.Unary -> {
                         // check if we overwrite a child
                         val currentChild =
-                            newAttribute.getFrom(newParent) as? KmfObject
+                            newAttribute.get(newParent) as? KmfObject
                         if (currentChild != null) {
                             currentChild.parent = null
                             currentChild.parentChildAttribute = null
@@ -301,7 +301,7 @@ abstract class KmfObject {
                     }
                     is KmfAttribute.List -> {
                         val list =
-                            newAttribute.getFrom(newParent) as KmfChildrenListImpl<*>
+                            newAttribute.get(newParent) as KmfChildrenListImpl<*>
                         list.addWithoutParentNotify(child, listIndex)
                     }
                 }

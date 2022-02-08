@@ -57,7 +57,7 @@ fun KmfObject.debugPath(
             append(".").append(attr.kProperty.name)
             if (attr is KmfAttribute.List) {
                 append("[")
-                append(attr.getFrom(cur).indexOf(next))
+                append(attr.get(cur).indexOf(next))
                 append("]")
             }
 
@@ -76,7 +76,7 @@ val KmfObject.root: KmfObject
         return cur
     }
 
-fun KmfObject.idOrNull(): String? = kmfClass.id?.getFrom(this) as String?
+fun KmfObject.idOrNull(): String? = kmfClass.id?.get(this) as String?
 
 /**
  * Transitively iterates over all children.
@@ -90,12 +90,12 @@ fun KmfObject.iterateChildTree(
     for (childAttr in kmfClass.allChildren) {
         when (childAttr) {
             is KmfAttribute.Unary -> {
-                val child = childAttr.getFrom(this) as? KmfObject
+                val child = childAttr.get(this) as? KmfObject
                 if (child != null && predicate(child))
                     child.iterateChildTree(false, predicate)
             }
             is KmfAttribute.List -> {
-                val list = childAttr.getFrom(this)
+                val list = childAttr.get(this)
                 for (child in list) {
                     if (child is KmfObject && predicate(child))
                         child.iterateChildTree(false, predicate)

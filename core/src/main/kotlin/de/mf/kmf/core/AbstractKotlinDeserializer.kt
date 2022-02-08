@@ -75,7 +75,7 @@ abstract class AbstractKotlinDeserializer {
         if (resolved == null) {
             unresolvedRefs += UnresolvedRef(
                 head.obj, attr,
-                if (attr is KmfAttribute.List) attr.getFrom(head.obj).size + head.curAttrMissingRefs
+                if (attr is KmfAttribute.List) attr.get(head.obj).size + head.curAttrMissingRefs
                 else 0,
                 path
             )
@@ -83,7 +83,7 @@ abstract class AbstractKotlinDeserializer {
         } else {
             when (attr) {
                 is KmfAttribute.Unary -> attr.kProperty.set(head.obj, resolved)
-                is KmfAttribute.List -> attr.getFrom(head.obj).add(resolved)
+                is KmfAttribute.List -> attr.get(head.obj).add(resolved)
             }
         }
     }
@@ -116,7 +116,7 @@ abstract class AbstractKotlinDeserializer {
             is KmfAttribute.Unary -> {
                 attribute.kProperty.set(head.obj, value)
             }
-            is KmfAttribute.List -> attribute.getFrom(head.obj).add(
+            is KmfAttribute.List -> attribute.get(head.obj).add(
                 checkNotNull(value) {
                     "Cannot add null to KmfList ${head.obj.debugPath()}.${attribute.kProperty.name}."
                 })
@@ -140,7 +140,7 @@ abstract class AbstractKotlinDeserializer {
                 )
                 is KmfAttribute.List -> {
                     val listValue = unresolved.attribute
-                        .getFrom(unresolved.obj)
+                        .get(unresolved.obj)
                     listValue.add(unresolved.index, resolvedObj)
                 }
             }

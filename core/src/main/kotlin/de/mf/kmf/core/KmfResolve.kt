@@ -21,7 +21,7 @@ fun KmfObject.path(): String = buildString {
         val pcAttr = objPath[i].parentChildAttribute!!
         append(".").append(pcAttr.kProperty.name)
         if (pcAttr is KmfAttribute.List) {
-            val parentChildList = pcAttr.getFrom(objPath[i - 1])
+            val parentChildList = pcAttr.get(objPath[i - 1])
             val indexInParentChildList = parentChildList.indexOf(objPath[i])
             check(indexInParentChildList != -1)
             append("[").append(indexInParentChildList).append("]")
@@ -76,12 +76,12 @@ class KmfResolver(
             val next = when (attr) {
                 is KmfAttribute.Unary -> {
                     require(propIndex.isEmpty()) { "Unexpected index in path: $debugPath" }
-                    attr.getFrom(cur) as KmfObject?
+                    attr.get(cur) as KmfObject?
                 }
                 is KmfAttribute.List -> {
                     val propIntIndex = propIndex.toIntOrNull()
                     requireNotNull(propIntIndex) { "Missing index in path: $debugPath" }
-                    val list = attr.getFrom(cur)
+                    val list = attr.get(cur)
                     val e = list.getOrNull(propIntIndex) as KmfObject?
                     e
                 }
