@@ -1,0 +1,10 @@
+plugins {
+    id "org.openjfx.javafxplugin" version "0.0.11"
+}
+
+javafx {
+    version = "11"
+    modules = [ "javafx.base" ]
+    // I don't want to mess up javafx dependencies of projects using this module.
+    configuration = 'compileOnly'
+}
