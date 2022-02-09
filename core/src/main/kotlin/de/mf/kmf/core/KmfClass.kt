@@ -3,7 +3,6 @@ package de.mf.kmf.core
 import kotlin.reflect.KClass
 import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.KProperty1
-import kotlin.reflect.full.companionObjectInstance
 import kotlin.reflect.full.isSubclassOf
 
 /** Contains reflective information about [KmfObject]. */
@@ -16,7 +15,9 @@ abstract class KmfClass(
 
     private val ownAttributes = mutableListOf<KmfAttribute>()
 
-    open val id: KmfAttribute? = null
+    val idAttribute: KmfAttribute? by lazy {
+        allProperties.firstOrNull { it.name == "id" && it is KmfAttribute.Unary && it.valueType == String::class }
+    }
 
     /** All attributes available. This include all derived attributes as well. */
     val allAttributes: List<KmfAttribute> by lazy {

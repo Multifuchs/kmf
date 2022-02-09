@@ -99,27 +99,31 @@ abstract class AbstractKmfSerializer {
                 startObject(head.obj, parentList)
                 attrLoop@ for (attr in head.obj.kmfClass.allAttributes) {
                     if (attr.kind == KmfAttrKind.CHILD) continue@attrLoop
-                    val value = attr.get(head.obj)
+
+                    if (ignoreDefaultValues)
+                        when (attr) {
+                            is KmfAttribute.Unary ->
+                                if (attr.get(head.obj) == attr.defaultValue) continue@attrLoop
+                            is KmfAttribute.List ->
+                                if (attr.get(head.obj)
+                                        .isEmpty()
+                                ) continue@attrLoop
+                        }
 
                     try {
                         when (attr.kind) {
                             KmfAttrKind.PROPERTY -> when (attr) {
-                                is KmfAttribute.Unary -> {
-                                    val value = attr.get(head.obj)
-                                    if (!ignoreDefaultValues || value != attr.defaultValue)
-                                        onSimpleProperty(
-                                            head.obj, attr, value,
-                                            parentList
-                                        )
-                                }
+                                is KmfAttribute.Unary ->
+                                    onSimpleProperty(
+                                        head.obj, attr, attr.get(head.obj),
+                                        parentList
+                                    )
                                 is KmfAttribute.List -> {
-                                    val list = attr.get(head.obj)
-                                    if (!ignoreDefaultValues || list.isNotEmpty())
-                                        onSimpleListProperty(
-                                            head.obj, attr,
-                                            list,
-                                            parentList
-                                        )
+                                    onSimpleListProperty(
+                                        head.obj, attr,
+                                        attr.get(head.obj),
+                                        parentList
+                                    )
                                 }
                             }
                             KmfAttrKind.REFERENCE -> when (attr) {

@@ -76,7 +76,7 @@ val KmfObject.root: KmfObject
         return cur
     }
 
-fun KmfObject.idOrNull(): String? = kmfClass.id?.get(this) as String?
+fun KmfObject.idOrNull(): String? = kmfClass.idAttribute?.get(this) as String?
 
 /**
  * Transitively iterates over all children.
