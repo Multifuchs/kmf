@@ -18,4 +18,14 @@ class KmfAttrPathTest {
             root pathToKmfObj TestRoot::child toList TestNodeClass::children
     }
 
+    @Test(IllegalArgumentException::class)
+    fun testIllegalKind() {
+        TestRoot().attrPathToValue(listOf(TestRoot.KmfClass.simpleStringProp), TestRoot.KmfClass.id)
+    }
+
+    @Test(IllegalArgumentException::class)
+    fun testPropertyNotAMemberOfParent() {
+        TestRoot().attrPathToValue(listOf(), TestNodeClass.KmfClass.name)
+    }
+
 }
