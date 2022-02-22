@@ -8,7 +8,7 @@ import kotlin.reflect.KProperty1
 import kotlin.reflect.full.isSubclassOf
 
 sealed class KmfAttrPath<T> constructor(
-    val root: KmfObject,
+    val root: KmfClass,
     val attrPath: List<KmfAttribute>
 ) {
     protected fun validate() {
@@ -21,7 +21,7 @@ sealed class KmfAttrPath<T> constructor(
                 }
             }
             val kmfClass =
-                if (i == 0) root.kmfClass else (attrPath[i - 1].valueType as KClass<out KmfObject>).kmfClass
+                if (i == 0) root else (attrPath[i - 1].valueType as KClass<out KmfObject>).kmfClass
             require(kmfClass.allAttributes.contains(attr)) {
                 "attrPath at index $i: ${attr.name} is not an attribute of $kmfClass."
             }
@@ -31,7 +31,7 @@ sealed class KmfAttrPath<T> constructor(
 }
 
 class KmfOpenUnaryAttrPath<T : KmfObject> internal constructor(
-    root: KmfObject,
+    root: KmfClass,
     attrPath: List<KmfAttribute>
 ) : KmfAttrPath<T>(root, attrPath) {
     init {
@@ -47,7 +47,7 @@ class KmfOpenUnaryAttrPath<T : KmfObject> internal constructor(
 }
 
 class KmfClosedUnaryAttrPath<T> internal constructor(
-    root: KmfObject,
+    root: KmfClass,
     attrPath: List<KmfAttribute>
 ) : KmfAttrPath<T>(root, attrPath) {
     init {
@@ -59,7 +59,7 @@ class KmfClosedUnaryAttrPath<T> internal constructor(
 }
 
 class KmfClosedListAttrPath<T : Any> internal constructor(
-    root: KmfObject,
+    root: KmfClass,
     attrPath: List<KmfAttribute>
 ) : KmfAttrPath<KmfList<T>>(root, attrPath) {
     init {
@@ -70,19 +70,19 @@ class KmfClosedListAttrPath<T : Any> internal constructor(
     }
 }
 
-fun KmfObject.attrPathToValue(
+fun KmfClass.attrPathToValue(
     beginningAttrs: List<KmfAttribute.Unary>,
     lastAttr: KmfAttribute.Unary
 ): KmfClosedUnaryAttrPath<Any?> =
     KmfClosedUnaryAttrPath(this, beginningAttrs + lastAttr)
 
-fun KmfObject.attrPathToList(
+fun KmfClass.attrPathToList(
     beginningAttrs: List<KmfAttribute.Unary>,
     lastAttr: KmfAttribute.List
 ): KmfClosedListAttrPath<Any> =
     KmfClosedListAttrPath(this, beginningAttrs + lastAttr)
 
-infix fun <K : KmfObject, T : KmfObject> K.pathToKmfObj(
+infix fun <K : KmfObject, T : KmfObject> KClass<out K>.pathToKmfObj(
     prop: KMutableProperty1<K, T?>
 ): KmfOpenUnaryAttrPath<T> {
     val attr = findAttribute(this, prop)
@@ -90,11 +90,11 @@ infix fun <K : KmfObject, T : KmfObject> K.pathToKmfObj(
         "Attribute $attr is not a unary reference or child attribute."
     }
     return KmfOpenUnaryAttrPath(
-        this, listOf(attr)
+        this.kmfClass, listOf(attr)
     )
 }
 
-infix fun <K : KmfObject, T> K.pathToValue(
+infix fun <K : KmfObject, T> KClass<out K>.pathToValue(
     prop: KMutableProperty1<K, T>
 ): KmfClosedUnaryAttrPath<T> {
     val attr = findAttribute(this, prop)
@@ -102,19 +102,19 @@ infix fun <K : KmfObject, T> K.pathToValue(
         "Attribute $attr is not a unary attribute."
     }
     return KmfClosedUnaryAttrPath(
-        root,
+        this.kmfClass,
         listOf(attr)
     )
 }
 
-infix fun <K : KmfObject, T : Any> K.pathToList(
+infix fun <K : KmfObject, T : Any> KClass<out K>.pathToList(
     prop: KProperty1<K, KmfList<T>>
 ): KmfClosedListAttrPath<T> {
     val attr = findAttribute(this, prop)
     require(attr is KmfAttribute.List && attr.valueType == prop.returnType.arguments.first().type?.classifier) {
         "Attribute $attr is not a list attribute."
     }
-    return KmfClosedListAttrPath(root, listOf(attr))
+    return KmfClosedListAttrPath(this.kmfClass, listOf(attr))
 }
 
 infix fun <P : KmfObject, T : KmfObject> KmfOpenUnaryAttrPath<P>.toKmfObj(
@@ -153,9 +153,9 @@ infix fun <P : KmfObject, T : Any> KmfOpenUnaryAttrPath<P>.toList(
     )
 }
 
-private fun findAttribute(obj: KmfObject, prop: KProperty<*>): KmfAttribute =
-    requireNotNull(obj.kmfClass.allAttributes.firstOrNull { it.name == prop.name }) {
-        "No attribute '${prop.name}' found in KmfClass ${obj.kmfClass}"
+private fun findAttribute(kClass: KClass<out KmfObject>, prop: KProperty<*>): KmfAttribute =
+    requireNotNull(kClass.kmfClass.allAttributes.firstOrNull { it.name == prop.name }) {
+        "No attribute '${prop.name}' found in KmfClass ${kClass.kmfClass}"
     }
 
 private fun findAttribute(

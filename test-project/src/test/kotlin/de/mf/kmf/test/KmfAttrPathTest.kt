@@ -7,25 +7,24 @@ class KmfAttrPathTest {
 
     @Test
     fun testBuilder() {
-        val root = TestRoot()
 
-        val path1 = root pathToKmfObj TestRoot::child
-        val path2 = root pathToValue TestRoot::nullStringProp
-        val path3 = root pathToList TestRoot::listStringProp
+        val path1 = TestRoot::class pathToKmfObj TestRoot::child
+        val path2 = TestRoot::class pathToValue TestRoot::nullStringProp
+        val path3 = TestRoot::class pathToList TestRoot::listStringProp
         val extendedPath1 =
-            root pathToKmfObj TestRoot::child toValue TestNodeClass::name
+            TestRoot::class pathToKmfObj TestRoot::child toValue TestNodeClass::name
         val extendedPath2 =
-            root pathToKmfObj TestRoot::child toList TestNodeClass::children
+            TestRoot::class pathToKmfObj TestRoot::child toList TestNodeClass::children
     }
 
     @Test(IllegalArgumentException::class)
     fun testIllegalKind() {
-        TestRoot().attrPathToValue(listOf(TestRoot.KmfClass.simpleStringProp), TestRoot.KmfClass.id)
+        TestRoot.KmfClass.attrPathToValue(listOf(TestRoot.KmfClass.simpleStringProp), TestRoot.KmfClass.id)
     }
 
     @Test(IllegalArgumentException::class)
     fun testPropertyNotAMemberOfParent() {
-        TestRoot().attrPathToValue(listOf(), TestNodeClass.KmfClass.name)
+        TestRoot.KmfClass.attrPathToValue(listOf(), TestNodeClass.KmfClass.name)
     }
 
 }
