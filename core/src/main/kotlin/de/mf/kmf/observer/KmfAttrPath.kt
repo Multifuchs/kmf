@@ -25,8 +25,30 @@ sealed class KmfAttrPath<T> constructor(
             require(kmfClass.allAttributes.contains(attr)) {
                 "attrPath at index $i: ${attr.name} is not an attribute of $kmfClass."
             }
-
         }
+    }
+
+    fun getValue(rootObj: KmfObject): T? = resolveLastParent(rootObj)
+        ?.let { attrPath.last().get(it) as T? }
+
+    protected open fun setValue(rootObj: KmfObject, newValue: T): Boolean {
+        val lastParent = resolveLastParent(rootObj) ?: return false
+        (attrPath.last() as KmfAttribute.Unary).set(lastParent, newValue)
+        return true
+    }
+
+    private fun resolveLastParent(rootObj: KmfObject): KmfObject? {
+        require(root.isSuperclassOf(rootObj.kmfClass)) {
+            "rootObj is not compatible to path: path starts with a $root, but rootObj is a ${rootObj.kmfClass}."
+        }
+
+        var curObj = rootObj
+        if (attrPath.size > 1) {
+            for (i in 0 until attrPath.lastIndex) {
+                curObj = attrPath[i].get(curObj) as KmfObject? ?: return null
+            }
+        }
+        return curObj
     }
 }
 
@@ -44,6 +66,10 @@ class KmfOpenUnaryAttrPath<T : KmfObject> internal constructor(
             "Last element in path must be a reference or child attribute."
         }
     }
+
+    public override fun setValue(rootObj: KmfObject, newValue: T): Boolean {
+        return super.setValue(rootObj, newValue)
+    }
 }
 
 class KmfClosedUnaryAttrPath<T> internal constructor(
@@ -55,6 +81,10 @@ class KmfClosedUnaryAttrPath<T> internal constructor(
         require(attrPath.last() is KmfAttribute.Unary) {
             "Last element in path must be a unary attribute."
         }
+    }
+
+    public override fun setValue(rootObj: KmfObject, newValue: T): Boolean {
+        return super.setValue(rootObj, newValue)
     }
 }
 
@@ -142,7 +172,7 @@ infix fun <P : KmfObject, T> KmfOpenUnaryAttrPath<P>.toValue(
 }
 
 infix fun <P : KmfObject, T : Any> KmfOpenUnaryAttrPath<P>.toList(
-    prop: KProperty1<P, T>
+    prop: KProperty1<P, KmfList<T>>
 ): KmfClosedListAttrPath<T> {
     val attr = findAttribute(this, prop)
     require(attr is KmfAttribute.List && attr.valueType == prop.returnType.arguments.first().type?.classifier) {
@@ -153,7 +183,10 @@ infix fun <P : KmfObject, T : Any> KmfOpenUnaryAttrPath<P>.toList(
     )
 }
 
-private fun findAttribute(kClass: KClass<out KmfObject>, prop: KProperty<*>): KmfAttribute =
+private fun findAttribute(
+    kClass: KClass<out KmfObject>,
+    prop: KProperty<*>
+): KmfAttribute =
     requireNotNull(kClass.kmfClass.allAttributes.firstOrNull { it.name == prop.name }) {
         "No attribute '${prop.name}' found in KmfClass ${kClass.kmfClass}"
     }
