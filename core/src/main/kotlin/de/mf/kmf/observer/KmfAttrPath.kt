@@ -1,6 +1,7 @@
 package de.mf.kmf.observer
 
 import de.mf.kmf.core.*
+import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.KProperty
@@ -31,13 +32,11 @@ sealed class KmfAttrPath<T> constructor(
     fun getValue(rootObj: KmfObject): T? = resolveLastParent(rootObj)
         ?.let { attrPath.last().get(it) as T? }
 
-    protected open fun setValue(rootObj: KmfObject, newValue: T): Boolean {
-        val lastParent = resolveLastParent(rootObj) ?: return false
-        (attrPath.last() as KmfAttribute.Unary).set(lastParent, newValue)
-        return true
-    }
+    fun getOptionalValue(rootObj: KmfObject): Optional<T> =
+        resolveLastParent(rootObj)?.let { Optional.of(it as T) }
+            ?: Optional.empty()
 
-    private fun resolveLastParent(rootObj: KmfObject): KmfObject? {
+    protected fun resolveLastParent(rootObj: KmfObject): KmfObject? {
         require(root.isSuperclassOf(rootObj.kmfClass)) {
             "rootObj is not compatible to path: path starts with a $root, but rootObj is a ${rootObj.kmfClass}."
         }
@@ -52,7 +51,7 @@ sealed class KmfAttrPath<T> constructor(
     }
 }
 
-class KmfOpenUnaryAttrPath<T : KmfObject> internal constructor(
+sealed class KmfUnaryAttrPath<T> constructor(
     root: KmfClass,
     attrPath: List<KmfAttribute>
 ) : KmfAttrPath<T>(root, attrPath) {
@@ -61,30 +60,29 @@ class KmfOpenUnaryAttrPath<T : KmfObject> internal constructor(
         require(attrPath.last() is KmfAttribute.Unary) {
             "Last element in path must be a unary attribute."
         }
+    }
+
+    fun setValue(rootObj: KmfObject, newValue: T): Boolean {
+        val lastParent = resolveLastParent(rootObj) ?: return false
+        (attrPath.last() as KmfAttribute.Unary).set(lastParent, newValue)
+        return true
+    }
+}
+
+class KmfClosedUnaryAttrPath<T> constructor(
+    root: KmfClass,
+    attrPath: List<KmfAttribute>
+) : KmfUnaryAttrPath<T>(root, attrPath)
+
+class KmfOpenUnaryAttrPath<T : KmfObject> internal constructor(
+    root: KmfClass,
+    attrPath: List<KmfAttribute>
+) : KmfUnaryAttrPath<T>(root, attrPath) {
+    init {
         val kind = attrPath.last().kind
         require(kind == KmfAttrKind.CHILD || kind == KmfAttrKind.REFERENCE) {
             "Last element in path must be a reference or child attribute."
         }
-    }
-
-    public override fun setValue(rootObj: KmfObject, newValue: T): Boolean {
-        return super.setValue(rootObj, newValue)
-    }
-}
-
-class KmfClosedUnaryAttrPath<T> internal constructor(
-    root: KmfClass,
-    attrPath: List<KmfAttribute>
-) : KmfAttrPath<T>(root, attrPath) {
-    init {
-        validate()
-        require(attrPath.last() is KmfAttribute.Unary) {
-            "Last element in path must be a unary attribute."
-        }
-    }
-
-    public override fun setValue(rootObj: KmfObject, newValue: T): Boolean {
-        return super.setValue(rootObj, newValue)
     }
 }
 
