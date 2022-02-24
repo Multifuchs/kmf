@@ -41,7 +41,9 @@
       "singleRef": "ref TestNodeClass?",
       "multiRef": "ref TestNodeClass[]",
       "child": "child TestNodeClass?",
-      "children": "child TestNodeClass[]"
+      "children": "child TestNodeClass[]",
+      "friend": "child TestRoot?",
+      "friends": "child TestRoot[]"
     },
     "TestExtendedRoot": {
       "superClass": "TestRoot",
