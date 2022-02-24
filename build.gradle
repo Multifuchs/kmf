@@ -34,6 +34,12 @@ subprojects {
 
     compileJava {
         sourceCompatibility = "$java_version"
+        targetCompatibility = "$java_version"
+    }
+
+    compileTestJava {
+        sourceCompatibility = "$java_version"
+        targetCompatibility = "$java_version"
     }
 
     compileTestJava {
