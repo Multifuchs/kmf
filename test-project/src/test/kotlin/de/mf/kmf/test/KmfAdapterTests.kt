@@ -27,7 +27,7 @@ class KmfAdapterTests {
         onNotify.clear()
 
         val adapter = object : KmfAdapter {
-            override fun onAdapt(obj: KmfObject) {
+            override fun onAttach(obj: KmfObject) {
                 onAdapt += obj
             }
 
@@ -36,9 +36,9 @@ class KmfAdapterTests {
             }
         }
 
-        rootA.adapt(adapter.javaClass) { adapter }
-        rootB.adapt(adapter.javaClass) { adapter }
-        child.adapt(adapter.javaClass) { adapter }
+        rootA.adaptIfNotExists(adapter.javaClass) { adapter }
+        rootB.adaptIfNotExists(adapter.javaClass) { adapter }
+        child.adaptIfNotExists(adapter.javaClass) { adapter }
     }
 
     @Test

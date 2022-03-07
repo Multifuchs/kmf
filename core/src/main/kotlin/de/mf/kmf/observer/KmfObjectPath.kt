@@ -10,7 +10,7 @@ import kotlin.reflect.KProperty1
 class KmfObjPath<R : KmfObject, D : KmfObject> private constructor(
     val rootType: KClass<R>,
     val destType: KClass<D>,
-    val path: List<KmfAttribute.Unary>
+    val attributes: List<KmfAttribute.Unary>
 ) {
 
     val rootKmfClass = rootType.kmfClass
@@ -24,7 +24,7 @@ class KmfObjPath<R : KmfObject, D : KmfObject> private constructor(
             "Attribute $attr must be unary and either a child or reference attribute."
         }
         @Suppress("UNCHECKED_CAST")
-        return KmfObjPath(rootType, attr.valueType as KClass<T>, path + attr)
+        return KmfObjPath(rootType, attr.valueType as KClass<T>, attributes + attr)
     }
 
     fun resolve(obj: R): D? {
@@ -32,7 +32,7 @@ class KmfObjPath<R : KmfObject, D : KmfObject> private constructor(
             "obj must be a subclass of $rootKmfClass."
         }
         var cur: KmfObject = obj
-        for (attr in path) {
+        for (attr in attributes) {
             cur = (attr.get(cur) as KmfObject?) ?: return null
         }
         @Suppress("UNCHECKED_CAST")

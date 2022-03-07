@@ -20,7 +20,12 @@ interface KmfAdapter {
     /**
      * Called when the adapter is added to a [KmfObject].
      */
-    fun onAdapt(obj: KmfObject) = Unit
+    fun onAttach(obj: KmfObject) = Unit
+
+    /**
+     * Called when the adapter is removed from a [KmfObject].
+     */
+    fun onDetach(obj: KmfObject) = Unit
 }
 
 sealed interface KmfNotification {

@@ -6,23 +6,23 @@ import de.mf.kmf.core.KmfObject
 import kotlin.reflect.KProperty1
 
 sealed class KmfValuePath<R : KmfObject, T>(
-    val kmfObjPath: KmfObjPath<R, *>,
+    val objPath: KmfObjPath<R, *>,
     open val valueAttr: KmfAttribute
 ) {
     protected fun validateAttrExists() {
-        require(kmfObjPath.destKmfClass.allAttributes.contains(valueAttr)) {
-            "Attribute $valueAttr is not an attribute of ${kmfObjPath.destKmfClass}."
+        require(objPath.destKmfClass.allAttributes.contains(valueAttr)) {
+            "Attribute $valueAttr is not an attribute of ${objPath.destKmfClass}."
         }
     }
 
     fun get(root: R): T? {
-        val destKmfObj = kmfObjPath.resolve(root) ?: return null
+        val destKmfObj = objPath.resolve(root) ?: return null
         @Suppress("UNCHECKED_CAST")
         return valueAttr.get(destKmfObj) as T?
     }
 
     fun getKmfValue(root: R): KmfValue<T> {
-        val destKmfObj = kmfObjPath.resolve(root)
+        val destKmfObj = objPath.resolve(root)
             ?: return KmfUnresolvedValue()
         @Suppress("UNCHECKED_CAST")
         return KmfResolvedValue(valueAttr.get(destKmfObj) as T)
@@ -41,7 +41,7 @@ class KmfUnaryValuePath<R : KmfObject, T>(
     }
 
     fun set(root: R, value: T): Boolean {
-        val destKmfObj = kmfObjPath.resolve(root) ?: return false
+        val destKmfObj = objPath.resolve(root) ?: return false
         valueAttr.set(destKmfObj, value)
         return true
     }

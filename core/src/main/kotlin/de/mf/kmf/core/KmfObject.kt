@@ -13,7 +13,7 @@ abstract class KmfObject {
 
     val adapters: List<KmfAdapter> get() = internalAdapterList ?: emptyList()
 
-    fun <T : KmfAdapter> adapt(
+    fun <T : KmfAdapter> adaptIfNotExists(
         type: Class<T>,
         builder: ((KmfObject) -> T)? = null
     ): T {
@@ -36,16 +36,36 @@ abstract class KmfObject {
                     "parameters."
             )
         ial.add(adapter)
-        adapter.onAdapt(this)
+        adapter.onAttach(this)
         return adapter
     }
 
+    fun adapt(adapter: KmfAdapter) {
+        var ial = internalAdapterList
+        if(ial == null) {
+            ial = mutableListOf()
+            internalAdapterList = ial
+        }
+        ial += adapter
+        adapter.onAttach(this)
+    }
+
     fun removeAdapter(adapter: KmfAdapter) {
-        internalAdapterList?.removeAll { it === adapter }
+        removeAdapter { it === adapter }
     }
 
     fun removeAdapter(type: Class<out KmfAdapter>) {
-        internalAdapterList?.removeAll { it.javaClass === type }
+        removeAdapter { it.javaClass === type }
+    }
+
+    private fun removeAdapter(predicate: (KmfAdapter) -> Boolean) {
+        val removed = mutableListOf<KmfAdapter>()
+        internalAdapterList?.removeAll {
+            val rm = predicate(it)
+            if (rm) removed += it
+            rm
+        }
+        removed.forEach { it.onDetach(this) }
     }
 
     inline fun <reified T : KmfAdapter> adapterOrNull(): T? {
